@@ -1,18 +1,21 @@
 Backend
 -------
 Python -> FLASK, FLASK-SOCKETIO
-MONGODB
-  -> Store players, scores, gamestate
+
+MONGODB -> Store players, scores, gamestate
 
 Frontend
 -------
 Typescript or Javascript
+
 HTML5 Canvas
 
 Game Components
 -------
 Online 2D game
+
  -> Survival pong arena
+
  -> Massively multiplayer
 
 
