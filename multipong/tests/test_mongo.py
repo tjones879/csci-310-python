@@ -2,6 +2,7 @@ from multipong.multipong import mongo
 from datetime import datetime
 
 def test_mongo():
+    mongo.get_database().drop_collection('test_mongo')
     collection = mongo.get_database()['test_mongo']
     timestamp = datetime.now()
     test_entry = {
