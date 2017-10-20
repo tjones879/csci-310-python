@@ -1,4 +1,4 @@
-from multipong.multipong import app, mongo
+from multipong import mongo
 from datetime import datetime
 
 def test_mongo():
@@ -11,5 +11,5 @@ def test_mongo():
     assert collection.insert_one(test_entry).acknowledged, "Failed to insert test_entry into test_mongo collection"
     found_entry = collection.find_one({"name": "test_entry"})
     assert found_entry is not None, "Cannot find test_entry in test_mongo collection"
-    assert found_entry['timestamp'] == timestamp, "Timestamp in test_entry does not match original timestamp: '{}' vs '{}'".format(found_entry['timestamp'].strftime("%I:%M%p on %B %d, %Y"), timestamp.strftime("%I:%M%p on %B %d, %Y"))
+    assert found_entry['timestamp'].strftime("%I:%M%p on %B %d, %Y") == timestamp.strftime("%I:%M%p on %B %d, %Y"), "Timestamp in test_entry does not approximately match original timestamp: '{}' vs '{}'".format(found_entry['timestamp'].strftime("%I:%M%p on %B %d, %Y"), timestamp.strftime("%I:%M%p on %B %d, %Y"))
     assert collection.delete_one({"name": "test_entry"}).acknowledged, "Failed to delete document 'test_entry' in collection 'test_mongo'"
