@@ -1,4 +1,4 @@
-from multipong import mongo
+from multipong.multipong import mongo
 from datetime import datetime
 
 def test_mongo():
