@@ -1,5 +1,6 @@
-from multipong.multipong import mongo
+from multipong import mongo
 from datetime import datetime
+
 
 def test_mongo():
     mongo.get_database().drop_collection('test_mongo')

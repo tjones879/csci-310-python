@@ -2,3 +2,4 @@ flask
 flask_socketio
 flask-session
 pymongo
+pytest-flask
