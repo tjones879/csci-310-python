@@ -35,6 +35,7 @@ app.config['SESSION_MONGODB_DB'] = app.config['MONGO_DBNAME']
 Session(app)
 
 from multipong.routes import *
+from multipong.sockets import *
 
 if __name__ == '__main__':
     socketio.run(app)
