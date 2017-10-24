@@ -37,7 +37,7 @@ Session(app)
 from multipong.routes import *
 
 def main():
-    socketio.run(app, host=0.0.0.0)
+    socketio.run(app, host="0.0.0.0")
 
 if __name__ == '__main__':
     main()
