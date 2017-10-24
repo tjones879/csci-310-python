@@ -1,23 +1,45 @@
 var socket = io.connect(location.protocol + "//" + document.domain + ':' + location.port);
 socket.on('connect', function() {
-    // emit a connect message
-    socket.emit('client_connected', {data: 'New Client!'});
-    $("#container").empty();
-    var $test_button = $('<button>', {id: "test_button"});
-    $test_button.innerText = "Test";
-    $test_button.click(function () {socket.emit('test_event', "it works!")});
-    var $messages = $('<div>', {id: "messages"});
-    $("#container").append($test_button);
-    $("#container").append($messages);
+    //Do something on connect
 });
 
-function test_message() {
-    socket.emit('test_event', {data: "it works!"});
+function draw_ui(data) {
+    var $container = $("#container");
+    var $input_label = $('<label>', {id: "input_label", text: "Message: "});
+    var $input_text = $('<input>', {id: "message_input", type: "text"});
+    var $send_message = $('<input>', {id: "message_send", type: "button", value: "Send"});
+    var $messages = $('<div>', {id: "messages"});
+    $send_message.click(function () {
+        socket.emit('message', {message: $input_text.val()});
+    });
+    $container.empty();
+    $container.append($input_label);
+    $container.append($input_text);
+    $container.append($send_message);
+    $container.append($messages);
 }
 
-socket.on('test_response', function(data) {
-   var $p = $('<p>');
-   $p.append(data.data);
-   $("#messages").append($p);
-   console.log(data);
+socket.on('user.name.get', function() {
+    $("#container").empty();
+    var $username_input = $('<input>', {type: "text", id: "username_input"});
+    var $submit_button = $('<input>', {type: "button", id: "submit_button", value: "Set Username"});
+    $submit_button.click(function () {
+        socket.emit("user.name.set", {username: $username_input.val()});
+    });
+    $("#container").append($username_input);
+    $("#container").append($submit_button);
 });
+
+socket.on('message', function(data) {
+    console.log(data);
+    var $p = $('<p>');
+    $p.append(data.username + ": " + data.message);
+    $("#messages").append($p);
+});
+
+socket.on('user.ready', function(data) {
+    console.log(data);
+    socket.emit('user.room.join'); //join a random room
+    draw_ui();
+});
+
