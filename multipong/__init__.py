@@ -28,6 +28,10 @@ from multipong.routes import *
 from multipong.sockets import *
 
 
+def create_app():
+    return app
+
+
 def main():
     # Bind to PORT if defined, otherwise default to 5000.
     port = int(os.environ.get('PORT', 5000))
