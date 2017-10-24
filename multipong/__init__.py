@@ -37,7 +37,9 @@ Session(app)
 from multipong.routes import *
 
 def main():
-    socketio.run(app, host="0.0.0.0")
+    # Bind to PORT if defined, otherwise default to 5000.
+    port = int(os.environ.get('PORT', 5000))
+    socketio.run(app, host="0.0.0.0", port=port)
 
 if __name__ == '__main__':
     main()
