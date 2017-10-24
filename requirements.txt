@@ -5,4 +5,3 @@ pymongo
 pytest-flask
 gevent
 gevent-websocket
-redis
