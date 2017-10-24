@@ -5,8 +5,6 @@ from flask_session import Session
 import redis
 import os
 import urllib.parse
-from multipong.routes import *
-from multipong.sockets import *
 
 
 app = Flask(__name__)
@@ -24,6 +22,10 @@ app.config['SESSION_TYPE'] = 'mongodb'
 app.config['SESSION_MONGODB'] = mongo
 app.config['SESSION_MONGODB_DB'] = mongo.get_database().name
 Session(app)
+
+
+from multipong.routes import *
+from multipong.sockets import *
 
 
 def main():
