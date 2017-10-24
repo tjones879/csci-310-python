@@ -34,16 +34,19 @@ def set_username(json):
 @socketio.on('user.room.join')
 def user_join_room():
     rooms = ROOMS_COLL.find()
-    if rooms.count() > 0:
-        room = rooms[0]
-    if rooms.count() < 1:
+    lrooms = list(rooms)
+    if len(lrooms) > 0:
+        room = lrooms[0]
+    if len(lrooms) < 1:
         room = ROOMS_COLL.find_one({"_id": create_room()})  # returns an oid for db entry of room
     elif not session.get('isSpectator'):
-        while len(room['players']) < MAX_ROOM_SIZE:
-            room = random.choice(rooms)
+        for r in lrooms:
+            if len(r['players']) < MAX_ROOM_SIZE:
+                room = r
     else:
-        while len(room['spectators']) < MAX_ROOM_SIZE:
-            room = random.choice(list(rooms))
+        for r in lrooms:
+            if len(r['spectators']) < MAX_ROOM_SIZE:
+                room = r
     session['room'] = room['_id']
     join_room(room['_id'])
     send(session.get('username') + ' has joined the room.', room=room['_id'])
