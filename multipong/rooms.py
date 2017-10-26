@@ -9,5 +9,5 @@ def generate_uid(size=10) -> str:
 class Room(walrus.Model):
     __database__ = walrus.Database.from_url(app.config.get("REDIS_URL"))
     id = walrus.TextField(default="room_{}".format(generate_uid()), index=True)
-    players = walrus.ListField()
-    spectators = walrus.ListField()
+    players = walrus.SetField()
+    spectators = walrus.SetField()

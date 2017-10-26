@@ -8,7 +8,6 @@ MAX_ROOM_SIZE = 10  # maximum of 10 players/specs per room
 
 @socketio.on('connect')
 def handle_connect():
-    print(list(Room.all()))
     if "username" not in session:
         user_join_room(isPlayer=False)
         emit('askusername')
@@ -27,27 +26,28 @@ def handle_newplayer(json):
 
 @socketio.on('roomjoin')
 def user_join_room(isPlayer=True):
-    if 'room' not in session or session['room'] is None:
-        rooms = Room.all()
-        if len(list(rooms)) < 1:  # case: no rooms on server
+    if session.get('room') is None:
+        rooms = list(Room.all())
+        if len(rooms) < 1:  # case: no rooms on server
             room = Room.create()
         else:
+            room = rooms[0]
             for rm in rooms:
                 if isPlayer:
                     if len(rm.players) < MAX_ROOM_SIZE:
                         room = rm
-                        room.players.append(session.sid)
+                        room.players.add(session.sid)
                         break
                     elif len(rm.spectators) < MAX_ROOM_SIZE:
                         room = rm
-                        room.spectators.append(session.sid)
+                        room.spectators.add(session.sid)
                         break
         session['room'] = room.id
+        room.save()
         join_room(room.id)
         if "username" in session and session['username'] is not None:
-            emit('roomjoin', {"username": session['username'], "room": room.id}, room=room.id);
+            emit('roomjoin', {"username": session['username'], "room": room.id}, room=room.id)
     else:
-        print(session['room'])
         join_room(session['room'])
 
 @socketio.on('roomupdate')
@@ -58,11 +58,12 @@ def roomupdate(data):
 @socketio.on('user.room.leave')
 def user_leave_room():
     leave_room(session['room'])
-    room = Room.load(str(session['room']))
+    room = list(Room.query(Room.id == session['room'])).__getitem__(0)  # avoids key error
     if session['isPlayer']:
-        room.player.remove(session.sid)
+        room.players.remove(session.sid)
     else:
         room.spectator.remove(session.sid)
+    room.save()
     if session['username'] is not None:
         emit('user.room.leave', {"username": session['username']}, room=session['room'])
     session['room'] = None
