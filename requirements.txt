@@ -2,7 +2,6 @@ flask
 flask_socketio
 flask-session
 pymongo
-bson
 pytest-flask
 eventlet
 redis
