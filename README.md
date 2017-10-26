@@ -13,3 +13,4 @@ git clone https://github.com/jtcressy-net/csci-310-python
 cd csci-310-python
 docker-compose up
 ```
+App will be live at http://localhost:5000
