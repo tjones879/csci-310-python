@@ -2,7 +2,8 @@ flask
 flask_socketio
 flask-session
 pymongo
+bson
 pytest-flask
-gevent
-gevent-websocket
+eventlet
 redis
+walrus

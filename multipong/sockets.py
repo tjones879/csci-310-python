@@ -1,80 +1,92 @@
-from multipong import socketio
-from multipong import mongo
-from multipong import app
+from multipong import socketio, mongo, app, redis_conn
 from flask import request, session, jsonify
 from flask_socketio import send, emit, join_room, leave_room
-from bson import ObjectId
-import random
+from multipong.rooms import Room
 
 PLAYER_COLL = mongo.get_database()['Players']
-ROOMS_COLL = mongo.get_database()['Rooms']
 MAX_ROOM_SIZE = 10  # maximum of 10 players/specs per room
 
 
 @socketio.on('connect')
 def handle_connect():
-    if 'username' and 'isSpectator' and 'room' in session:
-        if 'username' in session and session['username'] is not None:
-            emit('user.ready', {"username": session['username']}, room=request.sid)
-        else:
-            emit('user.name.get', room=request.sid)
+    print(list(Room.all()))
+    if "username" not in session:
+        user_join_room(isPlayer=False)
+        emit('askusername')
     else:
-        session["username"] = None
-        session["isSpectator"] = True
-        session["room"] = None
-        emit('user.name.get', room=request.sid)
+        user_join_room()
+        emit('playerready', {"username": session['username']})
 
 
-@socketio.on('user.name.set')
-def set_username(json):
+@socketio.on('newplayer')
+def handle_newplayer(json):
     session['username'] = json['username']
-    emit('user.ready', {"username": session['username']}, room=request.sid)
+    session['isPlayer'] = True
+    user_join_room()
+    emit('playerready', {"username": session['username']}, room=request.sid)
 
 
-@socketio.on('user.room.join')
-def user_join_room():
-    rooms = ROOMS_COLL.find()
-    lrooms = list(rooms)
-    if len(lrooms) > 0:
-        room = lrooms[0]
-    if len(lrooms) < 1:
-        room = ROOMS_COLL.find_one({"_id": create_room()})  # returns an oid for db entry of room
-    elif not session.get('isSpectator'):
-        for r in lrooms:
-            if len(r['players']) < MAX_ROOM_SIZE:
-                room = r
+@socketio.on('roomjoin')
+def user_join_room(isPlayer=True):
+    if 'room' not in session or session['room'] is None:
+        rooms = Room.all()
+        if len(list(rooms)) < 1:  # case: no rooms on server
+            room = Room.create()
+        else:
+            for rm in rooms:
+                if isPlayer:
+                    if len(rm.players) < MAX_ROOM_SIZE:
+                        room = rm
+                        room.players.append(session.sid)
+                        break
+                    elif len(rm.spectators) < MAX_ROOM_SIZE:
+                        room = rm
+                        room.spectators.append(session.sid)
+                        break
+        session['room'] = room.id
+        join_room(room.id)
+        if "username" in session and session['username'] is not None:
+            emit('roomjoin', {"username": session['username'], "room": room.id}, room=room.id);
     else:
-        for r in lrooms:
-            if len(r['spectators']) < MAX_ROOM_SIZE:
-                room = r
-    session['room'] = room['_id']
-    join_room(room['_id'])
-    send(session.get('username') + ' has joined the room.', room=room['_id'])
+        print(session['room'])
+        join_room(session['room'])
+
+@socketio.on('roomupdate')
+def roomupdate(data):
+    ""
 
 
 @socketio.on('user.room.leave')
 def user_leave_room():
-    room = ROOMS_COLL.find_one({"_id": session.get('room')})
-    leave_room(room['_id'])
+    leave_room(session['room'])
+    room = Room.load(str(session['room']))
+    if session['isPlayer']:
+        room.player.remove(session.sid)
+    else:
+        room.spectator.remove(session.sid)
+    if session['username'] is not None:
+        emit('user.room.leave', {"username": session['username']}, room=session['room'])
     session['room'] = None
-    send(session.get('username') + ' has left the room.', room=room['_id'])
 
 
-@socketio.on('message')
+@socketio.on('usermessage')
 def onmessage(json):
-    print(json)
-    print(session.get('room'))
     if session.get('room') is not None:
-        print(session.get('username'))
-        emit('message', {'username': session.get('username'), 'message': json['message']}, room=session.get('room'))
+        emit('usermessage', {'username': session.get('username'), 'message': json['message']}, room=session.get('room'))
     else:
         "error because user should have had a room"
 
 
-def create_room() -> ObjectId:
-    new_room = {
-        "players": [],
-        "spectators": []
-    }
-    result = ROOMS_COLL.insert_one(new_room)
-    return result.inserted_id
+@socketio.on('logout')
+def user_logout():
+    print('logout ', session.sid)
+    user_leave_room()
+    session.clear()
+    emit('askusername')
+
+
+@socketio.on('disconnect')
+def on_disconnect():
+    if "username" in session:
+        user_leave_room()
+    print("disconnected, ", session.sid)
