@@ -1,9 +1,8 @@
-from multipong import socketio, mongo, app, redis_conn
-from flask import request, session, jsonify
-from flask_socketio import send, emit, join_room, leave_room
+from multipong import socketio
+from flask import request, session
+from flask_socketio import emit, join_room, leave_room
 from multipong.rooms import Room
 
-PLAYER_COLL = mongo.get_database()['Players']
 MAX_ROOM_SIZE = 10  # maximum of 10 players/specs per room
 
 

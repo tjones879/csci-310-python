@@ -1,6 +1,4 @@
-from multipong import socketio, mongo, app, redis_conn
-from flask import request, session
-from flask_socketio import emit, join_room, leave_room, rooms, close_room
+from multipong import app
 import walrus
 
 def generate_uid(size=10) -> str:
