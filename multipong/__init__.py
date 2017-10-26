@@ -1,6 +1,5 @@
 from flask import Flask
 from flask_socketio import SocketIO
-from pymongo import MongoClient
 from flask_session import Session
 import redis
 import os
