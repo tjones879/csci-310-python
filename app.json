@@ -3,9 +3,6 @@
   "scripts": {
   },
   "env": {
-    "MONGODB_URI": {
-      "required": true
-    },
     "REDIS_URL": {
       "required": true
     }
@@ -13,7 +10,6 @@
   "formation": {
   },
   "addons": [
-    "mongolab",
     "heroku-redis"
   ],
   "buildpacks": [
