@@ -1,0 +1,15 @@
+version: '2'
+services:
+  multipong:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: multipong-web
+    ports:
+      - "5000:5000"
+    links:
+      - redis
+    environment:
+      - REDIS_URL=redis://redis:6379
+  redis:
+    image: redis:alpine

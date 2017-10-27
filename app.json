@@ -3,24 +3,6 @@
   "scripts": {
   },
   "env": {
-    "MONGODB_URI": {
-      "required": true
-    },
-    "MULTIPONG_MONGODB_DB": {
-      "required": true
-    },
-    "MULTIPONG_MONGODB_HOST": {
-      "required": true
-    },
-    "MULTIPONG_MONGODB_PASS": {
-      "required": true
-    },
-    "MULTIPONG_MONGODB_PORT": {
-      "required": true
-    },
-    "MULTIPONG_MONGODB_USER": {
-      "required": true
-    },
     "REDIS_URL": {
       "required": true
     }
@@ -28,7 +10,6 @@
   "formation": {
   },
   "addons": [
-    "mongolab",
     "heroku-redis"
   ],
   "buildpacks": [
