@@ -80,7 +80,8 @@ def roomjoin():
                     # TODO: Replace with Player object's id
                     room.players.add(session.sid)
                     break
-                elif len(rm.spectators) < MAX_ROOM_SIZE:
+            else:
+                if len(rm.spectators) < MAX_ROOM_SIZE:
                     room = rm
                     # TODO: Replace with Player object's id
                     room.spectators.add(session.sid)
