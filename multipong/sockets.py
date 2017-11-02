@@ -12,10 +12,7 @@ def handle_connect():
     if bool(app.config['DEBUG_MODE']):
         emit('toggledebug', {'debug': True})
         print('EVENT: connected', session.sid, session)
-    if "room" not in session:
-        roomjoin()
-    else:
-        join_room(str(session.get('room')))
+    roomjoin()
 
 
 @socketio.on('gamedata')
