@@ -20,7 +20,8 @@ except:
     pass
 #app.config['DEBUG'] = bool(os.environ.get('DEBUG'))
 
-socketio = SocketIO(app, manage_session=False, message_queue=app.config['REDIS_URL'], async_mode='eventlet')
+socketio = SocketIO(app, manage_session=False,
+                    message_queue=app.config['REDIS_URL'], async_mode='eventlet')
 
 redis_conn = redis.from_url(app.config['REDIS_URL'])
 walrus_conn = walrus.Database.from_url(app.config['REDIS_URL'])
@@ -32,6 +33,7 @@ Session(app)
 from multipong.routes import *
 from multipong.sockets import *
 from multipong.models import *
+
 
 def create_app():
     return app

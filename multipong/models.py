@@ -9,8 +9,10 @@ class Room(walrus.Model):
     balls = walrus.SetField()  # [ <uuid>, ... ]
     players = walrus.SetField()  # [ <uuid>, ... ]
     spectators = walrus.SetField()  # [ <uuid>, ... ]
-    leaderboard = walrus.SetField()  # [ {playerid: <uuid>, score: <int>}, ... ]
+    # [ {playerid: <uuid>, score: <int>}, ... ]
+    leaderboard = walrus.SetField()
     arenasize = walrus.Field()  # <int>
+
 
 class Ball(walrus.Model):
     __database__ = walrus_conn
@@ -18,7 +20,8 @@ class Ball(walrus.Model):
     position = walrus.HashField()
     vector = walrus.HashField()
     ballType = walrus.TextField()
-    
+
+
 class Player(walrus.Model):
     __database__ = walrus_conn
     id = walrus.UUIDField(default=str(uuid.uuid4()), index=True)
@@ -27,5 +30,5 @@ class Player(walrus.Model):
     paddle = walrus.HashField()  # {pos: <int>, width: <int>}
     username = walrus.TextField()  # <str>
     score = walrus.Field()  # int
-    reginfo = walrus.HashField()  # {email: <str>, topscore: <int>, rank: <int>}
-    
+    # {email: <str>, topscore: <int>, rank: <int>}
+    reginfo = walrus.HashField()
