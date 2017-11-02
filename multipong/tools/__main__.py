@@ -1,0 +1,1 @@
+print("Use python -m multipong.tools.<tool name> to run a specific tool")
