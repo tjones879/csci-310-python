@@ -3,6 +3,7 @@ from flask import request, session
 from flask_socketio import emit, join_room, leave_room
 from multipong.models import Room
 import uuid
+import re
 
 MAX_ROOM_SIZE = 10  # maximum of 10 players/specs per room
 
@@ -116,6 +117,16 @@ def roomleave():
         # remove player from room in database
 
 
+def validate_username(username: str) -> str:
+    '''Require that a username is no more than 20 char
+       and is alphanumeric with spaces, dashes, or underscores'''
+    if len(username) > 20:
+        username = username[:20]
+    forbidden = re.compile("[^a-zA-Z0-9 _-]")
+    username = re.sub(forbidden, "", username)
+    return username
+
+
 @socketio.on('login')
 def handle_newplayer(data):
     if bool(app.config['DEBUG_MODE']):
@@ -126,11 +137,11 @@ def handle_newplayer(data):
     else:
         if session.get('room') is None:
             roomjoin()
-        session['username'] = data.get('username')
+        session['username'] = validate_username(data.get('username'))
         # update room with new player
         send_gamedata(action='init')
         if app.config['DEBUG_MODE']:
-            emit('debug', {'msg': "{} connected".format(data.get('username'))})
+            emit('debug', {'msg': "{} connected".format(session['username'])})
             print(data.get('username'), 'logged in')
 
 
