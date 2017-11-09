@@ -14,11 +14,11 @@ GAME_LOOP_THREAD = None
 app = Flask(__name__)
 app.config.from_object(__name__)
 app.config['REDIS_URL'] = os.environ['REDIS_URL']
+
 try:
     app.config['DEBUG_MODE'] = bool(os.environ['DEBUG'])
 except:
-    pass
-#app.config['DEBUG'] = bool(os.environ.get('DEBUG'))
+    app.config['DEBUG_MODE'] = False
 
 socketio = SocketIO(app, manage_session=False,
                     message_queue=app.config['REDIS_URL'], async_mode='eventlet')
