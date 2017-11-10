@@ -63,9 +63,6 @@ body{
     padding: 10px;
     width: 25%;
 }
-.canvas-cmp canvas{
-    border: 2px solid #000;
-}
 .leader-cmp .title-btn{
     display: block;
     float: right;
@@ -106,6 +103,13 @@ body{
     justify-content: space-between;
     border-bottom: 1px solid #333;
 }
+.canvas-cmp{
+    display: flex;
+}
+.canvas-cmp canvas{
+    border: 2px solid #000;
+    margin: auto;
+}
 .login-cmp{
     position: fixed;
     top: 45px;
@@ -113,11 +117,13 @@ body{
     right: 0;
     bottom: 0;
     display: none;
+    background: rgba(0, 0, 0, .5);
 }
 .login-cmp.visible{
     display: flex;
 }
 .login-cmp .form{
+    background-color:#fff;
     margin: auto;
     width: 100%;
     max-width: 400px;

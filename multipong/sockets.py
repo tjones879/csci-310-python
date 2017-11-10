@@ -14,7 +14,11 @@ def handle_connect():
         emit('toggledebug', {'debug': True})
         print('EVENT: connected', session.sid, session)
     roomjoin()
+    send_gamedata('init')
 
+@socketio.on('disconnect')
+def handle_disconnect():
+    roomleave()
 
 @socketio.on('gamedata')
 def send_gamedata(action='update'):
@@ -139,7 +143,6 @@ def handle_newplayer(data):
             roomjoin()
         session['username'] = validate_username(data.get('username'))
         # update room with new player
-        send_gamedata(action='init')
         if app.config['DEBUG_MODE']:
             emit('debug', {'msg': "{} connected".format(session['username'])})
             print(data.get('username'), 'logged in')
@@ -149,5 +152,4 @@ def handle_newplayer(data):
 def user_logout():
     if app.config['DEBUG_MODE']:
         print('EVENT: logout:', session.get('username'), session.sid)
-    roomleave()
     session.clear()
