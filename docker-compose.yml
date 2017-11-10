@@ -9,7 +9,17 @@ services:
       - "5000:5000"
     links:
       - redis
+      - mongo
     environment:
       - REDIS_URL=redis://redis:6379
+      - MONGO_URL=mongodb://mongo:27017/myDB
   redis:
     image: redis:alpine
+  mongo:
+    image: mongo:3.5
+    ports:
+      - '27017:27017'
+    volumes:
+      - 'mongo:/data/db'
+volumes:
+    mongo:

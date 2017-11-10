@@ -2,6 +2,7 @@ from flask import Flask
 from flask_socketio import SocketIO
 from flask_session import Session
 from flask_oauthlib.client import OAuth
+from pymongo import MongoClient
 import redis
 import os
 from threading import Thread
@@ -50,6 +51,11 @@ twitter = oauth.remote_app(
     access_token_url='https://api.twitter.com/oauth/access_token',
     authorize_url='https://api.twitter.com/oauth/authorize'
 )
+
+from multipong.mongo import init_users
+
+client = MongoClient(os.environ['MONGO_URL'])
+users = init_users(client)
 
 
 from multipong.routes import *

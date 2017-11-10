@@ -6,3 +6,4 @@ eventlet
 redis
 walrus
 flask-oauthlib
+pymongo
