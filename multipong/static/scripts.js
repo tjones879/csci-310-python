@@ -39,14 +39,13 @@ function App(){
   this.logOutUser = function(){
     ui.logOutUser();
     Client.logOutUser();
-    clearInterval(LOOP);
   }
 
   //Toggles Popup showing framerate keycodes and other usefull info
   this.toggleDebugMode = function(){
     debug = !debug;
   }
-  
+
   var haveBall = function(id){
     for(var a = 0; a < pongBalls.length; a++){
       if(pongBalls[a].id == id)
@@ -54,7 +53,7 @@ function App(){
     }
     return false;
   }
-  
+
   this.onGameData = function(data){
     for(var a = 0; a < data.balls.length; a++){
       if(!haveBall(data.balls[a].id)){
@@ -70,7 +69,7 @@ function App(){
         ball.vec.y = data.balls[a].vec.y;
       }
     }
-    
+
     if(data.action == "init"){
       ui.setRoom(data.id);
       LOOP = setInterval(loop, 1000/60);
@@ -142,7 +141,6 @@ function Ui(){
     this.user = "Not Logged In";
     username.innerHTML = this.user;
     closeBtn.classList.toggle('visible');
-    roomId.innerHTML = '';
   }
 
   //Toggles a few ui components and updates info
@@ -168,7 +166,7 @@ function Ui(){
         app.logInUser();
     }
   }
-  
+
   this.setRoom = function(id){
     roomId.innerHTML = '(' + id + ')';
   }
@@ -179,12 +177,12 @@ function Ui(){
 }
 
 function Ball(){
-  this.uid = 0;
+  this.ui = 0;
   this.pos = {x:0, y:0};
   this.vec = {x:0, y:0};
   
   this.init = function(auid, ax, ay, axDir, ayDir){
-    this.uid = auid;
+    this.id = auid;
     this.pos.x = ax;
     this.pos.y = ay;
     this.vec.x = axDir;
