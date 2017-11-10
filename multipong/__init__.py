@@ -1,10 +1,12 @@
 from flask import Flask
 from flask_socketio import SocketIO
 from flask_session import Session
+from flask_oauthlib.client import OAuth
 import redis
 import os
 from threading import Thread
 import eventlet
+import json
 
 eventlet.monkey_patch()
 
@@ -22,10 +24,38 @@ app.config['SESSION_TYPE'] = 'redis'
 app.config['SESSION_REDIS'] = redis_conn
 Session(app)
 
+oauth = OAuth(app)
+
+with open('oauth_creds.json') as file:
+    creds = json.load(file)
+
+google = oauth.remote_app(
+    'google',
+    consumer_key=creds['google']['c_id'],
+    consumer_secret=creds['google']['c_secret'],
+    request_token_params={'scope': 'email'},
+    base_url='https://www.googleapis.com/oauth2/v1/',
+    request_token_url=None,
+    access_token_method='POST',
+    access_token_url='https://accounts.google.com/o/oauth2/token',
+    authorize_url='https://accounts.google.com/o/oauth2/auth',
+)
+
+twitter = oauth.remote_app(
+    'twitter',
+    consumer_key=creds['twitter']['c_id'],
+    consumer_secret=creds['twitter']['c_secret'],
+    base_url='https://api.twitter.com/1.1/',
+    request_token_url='https://api.twitter.com/oauth/request_token',
+    access_token_url='https://api.twitter.com/oauth/access_token',
+    authorize_url='https://api.twitter.com/oauth/authorize'
+)
+
 
 from multipong.routes import *
 from multipong.sockets import *
 from multipong.rooms import *
+from multipong.oauth import *
 import multipong.game as game
 
 def create_app():
