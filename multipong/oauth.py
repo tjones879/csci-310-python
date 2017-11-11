@@ -1,10 +1,13 @@
-from flask import jsonify, request, session, url_for, redirect
-from multipong import app, google, twitter
+from flask import jsonify, session, url_for, redirect
+from multipong import app, google, twitter, users
+from multipong.models import User
 
 
 @app.route('/logout')
 def logout():
+    session.pop('user', None)
     session.pop('google_token', None)
+    session.pop('twitter_oauth', None)
     return redirect(url_for('index'))
 
 
@@ -23,23 +26,24 @@ def twitter_auth():
 @app.route("/callback/google")
 def google_callback():
     resp = google.authorized_response()
-    if resp is None:
-        return 'Access denied: reson=%s error=%s' % (
-            request.args['error_reason'],
-            request.args['error_description']
-        )
     session['google_token'] = (resp['access_token'], '')
-    me = google.get('userinfo')
-    # Figure out how to resolve different services
-    return jsonify({"data": me.data})
+    id = google.get('userinfo').data['id']
+    store_oauth_user(id, 'google')
+    return jsonify(dict(session.get('user')))
 
 
 @app.route('/callback/twitter')
 def twitter_callback():
     resp = twitter.authorized_response()
-    session['twitter_oauth'] = resp
-    # Figure out how to resolve different services
-    return jsonify({'user': resp['user_id']})
+    store_oauth_user(resp['user_id'], 'twitter')
+    return jsonify(dict(session.get('user')))
+
+
+@app.route('/getone')
+def get_one():
+    '''Endpoint to ensure that the current user is stored in db'''
+    current = users.find_one(dict(session['user'].key()))
+    return str(current)
 
 
 @google.tokengetter
@@ -52,3 +56,10 @@ def get_twitter_token():
     if 'twitter_oauth' in session:
         resp = session['twitter_oauth']
         return resp['oauth_token'], resp['oauth_token_secret']
+
+
+def store_oauth_user(oauth: str, provider: str) -> User:
+    user = User(oauth, provider)
+    user.update_db(users)
+    session['user'] = user
+    return user
