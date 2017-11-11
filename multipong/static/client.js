@@ -1,48 +1,84 @@
-var Client = {};
-Client.socket = io.connect();
+/* global io */
+var Client = new function(){
+    var socket = io.connect();
+    
+    this.init = function(){
+        //<Event Registration
+        socket.on('gamedata', onGameData);
+        socket.on('toggledebug', onToggleDebug);
+        socket.on('debug', onDebug);
+        
+        //OLDSTUFF
+        //socket.on('tick', tick);
+        //socket.on('roomupdate', Client.roomUpdate);
+        //socket.on('askusername', Client.askUsername);
+        //socket.on('playerready', Client.playerReady);
+        //socket.on('roomjoin', Client.roomJoin);
+        //</Event Registration>
+        socket.on('connect', function() {
+            console.log("connected");
+            //start the background game loop
+        });
+    }
+    
+    //<Event Handlers>
+    function onGameData(data) {
+        app.onGameData(data);
+        console.log("Data");
+    }
+    
+    function onDebug(data) {
+        console.log(data);
+    }
+    
+    function onToggleDebug(data) {
+        if (data.debug) {
+            app.toggleDebugMode();
+        }
+    }
+    this.logInUser = function(username) {
+        socket.emit('login', {"username": username});
+    };
+    
+    this.logOutUser = function() {
+        socket.emit('logout');
+    };
+    //</Event Handlers>
+    
+    //OLD STUFF
+    // outgoing events
+    /*
+    
+    this.toggleDebug = function(){
+        this.socket.emit('toggleDebug');
+    }
+    
+    // incoming event handlers
+    this.playerReady = function(data) {
+        Game.create();
+    };
+    this.roomJoin = function(data) {
+        var $p = $('<p>');
+        $p.append(data.username + " has joined the room.");
+        $("#messages").append($p);
+    };
+    this.roomUpdate = function(data) {
+        console.log(data);
+    };
+    this.onMessage = function(data) {
+        var $p = $('<p>');
+        $p.append(data.username + ": " + data.message);
+        $("#messages").append($p);
+    };
+    this.tick = function() {
+        socket.emit('roomupdate', {}); // FUTURE: Send player data
+    };
+    
+    this.askUsername = function() {
+        Game.init()
+    };
+    */
+    
+    
 
-// outgoing events
-Client.requestNewPlayer = function(username) {
-    Client.socket.emit('newplayer', {"username": username});
-};
-
-Client.logout = function() {
-    Client.socket.emit('logout');
-};
-
-// incoming event handlers
-Client.playerReady = function(data) {
-    Game.create();
-};
-Client.roomJoin = function(data) {
-    var $p = $('<p>');
-    $p.append(data.username + " has joined the room.");
-    $("#messages").append($p);
-};
-Client.roomUpdate = function(data) {
-    console.log(data);
-};
-Client.onMessage = function(data) {
-    var $p = $('<p>');
-    $p.append(data.username + ": " + data.message);
-    $("#messages").append($p);
-};
-Client.tick = function() {
-    Client.socket.emit('roomupdate', {}); // FUTURE: Send player data
-};
-
-Client.askUsername = function() {
-    Game.init()
-};
-
-// Event registration
-Client.socket.on('connect', function() {
-    console.log("connected");
-    Game.init();
-});
-Client.socket.on('usermessage', Client.onMessage);
-Client.socket.on('tick', Client.tick);
-Client.socket.on('roomupdate', Client.roomUpdate);
-Client.socket.on('askusername', Client.askUsername);
-Client.socket.on('playerready', Client.playerReady);
-Client.socket.on('roomjoin', Client.roomJoin);
+}

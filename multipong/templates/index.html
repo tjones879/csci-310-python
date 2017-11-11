@@ -1,4 +1,61 @@
 {% extends "layout.html" %}
 {% block body %}
+<header class="top-bar-wdg">
+    
+      <div id ="close-cmp" class="close-cmp">
+        <span>X</span>
+      </div><!--close-cmp-->
+      
+      <div class="username-cmp">
+        <span id="username" class="username"></span>
+      </div>
+      
+      <div class="title-cmp">
+        <span class="text">Multipong</span>
+        <span id="room-id" class="text"></span>
+      </div><!--title-cmp-->
+      
+      <div class="leader-cmp">
+        <span id="leaderboard-btn" class="title-btn">Leaderboard</span>
+        <div id="leaderboard" class="leader-wrap">
+          <div class="user"><span class="position">1.</span><span class="name">user1</span></div>
+          <div class="user"><span class="position">2.</span><span class="name">user2</span></div>
+          <div class="user"><span class="position">3.</span><span class="name">user3</span></div>
+          <div class="user"><span class="position">4.</span><span class="name">user4</span></div>
+          <div class="user"><span class="position">5.</span><span class="name">user5</span></div>
+          <div class="user"><span class="position">6.</span><span class="name">user6</span></div>
+          <div class="user"><span class="position">7.</span><span class="name">user7</span></div>
+          <div class="user"><span class="position">8.</span><span class="name">user8</span></div>
+          <div class="user"><span class="position">9.</span><span class="name">user9</span></div>
+          <div class="user"><span class="position">10.</span><span class="name">user10</span></div>
+        </div>
+      </div><!--leader-cmp-->
+    
+    </header><!--top-bar-wdg-->
+  
+    <div class="canvas-cmp">
+      <canvas id="canvas" class="canvas">Your browser does not support canvas</canvas>
+    </div><!--canvas-cmp-->
+    
+    <footer class="footer">
+      
+      <div class="nav-cmp">
+        <a href="/about">About</a>
+        <a href="/stats">Stats</a>
+        <a href="/scores">Scores</a>
+      </div><!--nav-cmp-->
+      
+      <div class="copy-cmp">
+        <span class="text">&copy; Joel Cressy, Tyler Jones, Ernie Ripley, Andre Whitehurst -- 2017</span>
+      </div>
+      
+    </footer>
+    
+    <div id="login-cmp" class="login-cmp visible">
+      <div class="form">
+        <input id="nickname-input" type="text" name="nickname" placeholder="Nickname">
+        <button id="nickname-button" class="button">Play!</button>
+      </div>
+    </div><!--login-cmp-->
     <div class="container" id="container">{{ container }}</div>
 {% endblock %}

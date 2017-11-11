@@ -1,0 +1,149 @@
+/*styles for multipong*/
+*{
+    box-sizing: border-box;
+}
+html{
+    height: 100%;
+    max-height: 100%;
+}
+body{
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    max-height: 100%;
+}
+.top-bar-wdg{
+    position: fixed;
+    top: 0;
+    background-color: #333;
+    width: 100%;
+    height: 45px;
+    display: flex;
+    justify-content: right;
+}
+.close-cmp{
+    display: none;
+    padding: 10px
+}
+.close-cmp.visible{
+    display: block;
+}
+.close-cmp span{
+    display: block;
+    width: 25px;
+    height: 25px;
+    background-color: #444;
+    color: #fff;
+    text-align: center;
+    text-decoration: none;
+    font: 700 16px/25px sans-serif;
+    border-radius: 3px;
+    padding: 1px;
+}
+.close-cmp span:hover{
+    background-color: #fff;
+    color: #444;
+    cursor: pointer;
+}
+.username-cmp{
+   font: 400 16px/25px sans-serif;
+   color: #fff;
+   padding: 10px;
+   margin-right: auto;
+}
+.title-cmp{
+    font: 700 20px/25px sans-serif;
+    padding: 10px;
+    color: #fff;
+    text-trasform: uppercase;
+    text-align: center;
+    width: 50%;
+}
+.leader-cmp{
+    padding: 10px;
+    width: 25%;
+}
+.canvas-cmp canvas{
+    border: 2px solid #000;
+}
+.leader-cmp .title-btn{
+    display: block;
+    float: right;
+    border-radius: 3px;
+    font: 300 16px/25px sans-serif;
+    background-color: #444;
+    color: #fff;
+    width: 120px;
+    text-align: center;
+}
+.leader-cmp .title-btn:hover{
+    color: #444;
+    background-color: #fff;
+    cursor: pointer;
+}
+.leader-cmp .leader-wrap{
+    height: 0;
+    overflow: hidden;
+    transition: all ease-in-out .5s;
+    background-color: #444;
+    color: #fff;
+    font: 300 16px/20px sans-serif;
+    padding: 0 10px;
+    position: absolute;
+    right: 10px;
+    top: 100%;
+}
+.leader-cmp .leader-wrap.visible{
+    height: 230px;
+    padding: 10px;
+}
+.leader-cmp .title{
+    display: block;
+}
+.leader-cmp .user{
+    display: flex;
+    width: 100px;
+    justify-content: space-between;
+    border-bottom: 1px solid #333;
+}
+.login-cmp{
+    position: fixed;
+    top: 45px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: none;
+}
+.login-cmp.visible{
+    display: flex;
+}
+.login-cmp .form{
+    margin: auto;
+    width: 100%;
+    max-width: 400px;
+    height: 200px;
+    border: 1px solid #444;
+    border-radius: 5px;
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+}
+.login-cmp .form input{
+    width: 100%;
+    font: 300 18px/30px sans-serif;
+    padding: 0 5px;
+}
+.login-cmp .form button{
+    width: 50%;
+    margin: 0 auto;
+    font: 300 18px/30px sans-serif;
+    color: #fff;
+    background-color: #333;
+    border: 1px solid #333;
+}
+.login-cmp .form button:hover{
+    cursor: pointer;
+    color: #333;
+    background-color: #fff;
+}
