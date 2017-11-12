@@ -55,7 +55,7 @@ class Room(walrus.Model):
         return Ball.load(ball_id)
 
     __database__ = walrus_conn
-    id = walrus.UUIDField(index=True)
+    id = walrus.UUIDField(primary_key=True, index=True)
     balls = walrus.ListField()  # [ <uuid>, ... ]
     players = walrus.SetField()  # [ <uuid>, ... ]
     spectators = walrus.SetField()  # [ <uuid>, ... ]
@@ -73,7 +73,7 @@ class Player(walrus.Model):
         return player
 
     __database__ = walrus_conn
-    id = walrus.UUIDField(index=True)
+    id = walrus.UUIDField(primary_key=True, index=True)
     sid = walrus.UUIDField()  # uuid.UUID(session.sid)
     room = walrus.UUIDField()  # <uuid>
     paddle = walrus.HashField()  # {pos: <int>, width: <int>}
