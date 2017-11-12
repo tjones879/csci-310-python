@@ -1,13 +1,15 @@
 from multipong import models
 import uuid
 import pytest
+import json
 
 
 class TestRoom:
     @pytest.fixture(scope='function')
     def room(self):
         room = models.Room.new()
-        yield room
+        id = room.id
+        yield models.Room.load(id)
         room.delete()
 
     def test_create(self, room):
@@ -58,17 +60,19 @@ class TestBall:
     @pytest.fixture(scope='function')
     def ball(self):
         ball = models.Ball.new()
-        yield ball
+        id = ball.id
+        yield models.Ball.load(id)
         ball.delete()
 
     def test_create(self, ball):
+        as_int = lambda obj: int(obj.decode('utf-8'))
         assert isinstance(ball.id, uuid.UUID)
-        assert ball.position['x'] == 500
-        assert ball.position['y'] == 500
-        assert ball.vector['x'] >= -models.MAX_SPEED
-        assert ball.vector['x'] <= models.MAX_SPEED
-        assert ball.vector['y'] >= -models.MAX_SPEED
-        assert ball.vector['y'] <= models.MAX_SPEED
+        assert as_int(ball.position['x']) == 500
+        assert as_int(ball.position['y']) == 500
+        assert as_int(ball.vector['x']) >= -models.MAX_SPEED
+        assert as_int(ball.vector['x']) <= models.MAX_SPEED
+        assert as_int(ball.vector['y']) >= -models.MAX_SPEED
+        assert as_int(ball.vector['y']) <= models.MAX_SPEED
         assert ball.ballType in models.BALL_TYPES
 
     def test_uniqueness(self, ball):
@@ -81,7 +85,8 @@ class TestPlayer:
     @pytest.fixture(scope='function')
     def player(self):
         player = models.Player.new()
-        yield player
+        id = player.id
+        yield models.Player.load(id)
         player.delete()
 
     def test_create(self, player):
