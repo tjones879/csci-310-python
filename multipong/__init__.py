@@ -13,7 +13,7 @@ GAME_LOOP_THREAD = None
 
 app = Flask(__name__)
 app.config.from_object(__name__)
-app.config['REDIS_URL'] = os.environ['REDIS_URL']
+app.config['REDIS_URL'] = os.environ.get('REDIS_URL')
 
 try:
     app.config['DEBUG_MODE'] = bool(os.environ['DEBUG'])

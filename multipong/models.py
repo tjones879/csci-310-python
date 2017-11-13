@@ -2,31 +2,17 @@ from multipong import walrus_conn
 import walrus
 import uuid
 import random
+from json import JSONEncoder
 
 
 DEFAULT_ARENA_SIZE = 1000
 BALL_TYPES = ["normal"]
+MAX_SPEED = 25
+NULL_UUID = uuid.uuid4()
 
 
-
-class Room(walrus.Model):
-    @staticmethod
-    def new():
-        room = Room.create(
-            id=uuid.uuid4(),
-            arenasize=DEFAULT_ARENA_SIZE
-        )
-        room.save()
-        return room
-
-    __database__ = walrus_conn
-    id = walrus.UUIDField(default=str(uuid.uuid4()), index=True)
-    balls = walrus.ListField()  # [ <uuid>, ... ]
-    players = walrus.SetField()  # [ <uuid>, ... ]
-    spectators = walrus.SetField()  # [ <uuid>, ... ]
-    # [ {playerid: <uuid>, score: <int>}, ... ]
-    leaderboard = walrus.SetField()
-    arenasize = walrus.Field()  # <int>
+def as_int(obj) -> int:
+    return int(obj.decode('utf-8'))
 
 
 class Ball(walrus.Model):
@@ -34,39 +20,183 @@ class Ball(walrus.Model):
     def new():
         ball = Ball.create(
             id=uuid.uuid4(),
-            position={
-                'x': 500,
-                'y': 500
-            },
-            vector={
-                'x': 50,
-                'y': 50
-            },
             ballType=random.choice(BALL_TYPES)
         )
+        ball.position['x'] = 500
+        ball.position['y'] = 500
+        ball.vector['x'] = random.randint(-MAX_SPEED, MAX_SPEED)
+        ball.vector['y'] = random.randint(-MAX_SPEED, MAX_SPEED)
         ball.save()
-        return ball
+        return Ball.load(ball.id)
+
+    def to_json(self):
+        '''Recursively convert fields to json-friendly output.
+
+        Return a dict with the following schema:
+        {
+          id: "uuid",
+          pos: {
+            x: int,
+            y: int,
+            },
+          vec: {
+            x: int,
+            y: int,
+            },
+          type: "ballType"
+        }
+        '''
+        return dict(
+                id=str(self.id),
+                pos=dict(
+                    x=as_int(self.position['x']),
+                    y=as_int(self.position['y'])),
+                vec=dict(
+                    x=as_int(self.vector['x']),
+                    y=as_int(self.vector['y'])),
+                type=self.ballType
+                )
+
     __database__ = walrus_conn
-    id = walrus.UUIDField(default=str(uuid.uuid4()), index=True)
-    position = walrus.Field()
-    vector = walrus.Field()
+    id = walrus.UUIDField(primary_key=True, index=True)
+    position = walrus.HashField()
+    vector = walrus.HashField()
     ballType = walrus.TextField()
 
 
 class Player(walrus.Model):
     @staticmethod
-    def new():
+    def new(session_id=uuid.uuid4()) -> 'Player':
         player = Player.create(
+            id=uuid.uuid4(),
+            room=NULL_UUID,
+            username="",
+            score=0,
+            sid=session_id,
+        )
+        player.paddle['x'] = 500
+        player.paddle['y'] = 500
+        player.save()
+        return Player.load(player.id)
+
+    def set_room(self, room: uuid.UUID) -> 'Player':
+        self.room = room
+        self.save()
+        return Player.load(self.id)
+
+    def to_json(self):
+        '''Recursively convert fields to json-friendly output.
+
+        Return a dict with the following schema:
+        {
+          id: "uuid",
+          score: int,
+          paddle: {
+            x: int,
+            y: int,
+            },
+        }
+        '''
+        return dict(
+                id=str(self.id),
+                score=self.score,
+                paddle=dict(
+                    x=as_int(self.paddle['x']),
+                    y=as_int(self.paddle['y']),
+                    ),
+                )
+
+    __database__ = walrus_conn
+    id = walrus.UUIDField(primary_key=True, index=True)
+    room = walrus.UUIDField()
+    username = walrus.TextField()
+    score = walrus.IntegerField()
+    paddle = walrus.HashField()
+    sid = walrus.UUIDField()
+    # TODO: reginfo = walrus.HashField()
+
+
+class Room(walrus.Model):
+    @staticmethod
+    def new() -> 'Room':
+        room = Room.create(
             id=uuid.uuid4()
         )
-        player.save()
-        return player
+        return room
+
+    def add_player(self, player) -> Player:
+        '''Add a player to the room by id or instance and set their room field.
+
+        Return the updated Player instance loaded from redis.
+        id -- Type uuid.UUID or Player
+        '''
+        if not (isinstance(player, Player) or isinstance(player, uuid.UUID)):
+                raise TypeError("Parameter must be of type"
+                                "multipong.model.Player or uuid.UUID,"
+                                "not {}".format(type(player)))
+        if isinstance(player, Player):
+            player = player.id
+        self.players.add(player)
+        added = Player.load(player).set_room(self.id)
+        return added
+
+    def remove_player(self, player) -> Player:
+        '''Remove player from room but do not delete instance.'''
+        if not (isinstance(player, Player) or isinstance(player, uuid.UUID)):
+                raise TypeError("Parameter must be of type"
+                                "multipong.model.Player or uuid.UUID,"
+                                "not {}".format(type(player)))
+        if isinstance(player, Player):
+            player = player.id
+        self.players.remove(player)
+        return Player.load(player).set_room(NULL_UUID)
+
+    def add_ball(self) -> Ball:
+        ball = Ball.new()
+        self.balls.append(ball.id)
+        return ball
+
+    def delete_ball(self, uid: uuid.UUID):
+        del self.balls[uid]
+        Ball.load(uid).delete()
+
+    def ball_at(self, index: int) -> Ball:
+        ball_id = uuid.UUID(self.balls[index].decode('utf-8'))
+        return Ball.load(ball_id)
+
+    def to_json(self) -> dict:
+        '''Recursively convert fields to json-friendly output.
+
+        Return a dict with the following schema:
+        {
+          id: "uuid",
+          balls: [<see Ball.to_json()>],
+          players: [<see Player.to_json()>]
+        }
+        '''
+        as_uuid = lambda obj: uuid.UUID(obj.decode('utf-8'))
+        return dict(
+                id=str(self.id),
+                balls=list(map(
+                    lambda ball: Ball.load(ball).to_json(),
+                    map(as_uuid, self.balls))),
+                players=list(map(
+                    lambda player: Player.load(player).to_json(),
+                    map(as_uuid, self.players))),
+                )
+
     __database__ = walrus_conn
-    id = walrus.UUIDField(default=str(uuid.uuid4()), index=True)
-    sid = walrus.UUIDField()  # uuid.UUID(session.sid)
-    room = walrus.UUIDField()  # <uuid>
-    paddle = walrus.HashField()  # {pos: <int>, width: <int>}
-    username = walrus.TextField()  # <str>
-    score = walrus.Field()  # int
-    # {email: <str>, topscore: <int>, rank: <int>}
-    reginfo = walrus.HashField()
+    id = walrus.UUIDField(primary_key=True, index=True)
+    balls = walrus.ListField()
+    players = walrus.SetField()
+    spectators = walrus.SetField()
+    # [ {playerid: <uuid>, score: <int>}, ... ]
+    leaderboard = walrus.SetField()
+    arenasize = walrus.IntegerField(default=DEFAULT_ARENA_SIZE)
+
+
+class RoomEncoder(JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Room):
+            return obj.to_json()
+        return JSONEncoder.encode(self, obj)
