@@ -16,12 +16,29 @@ class TestRoom:
         assert isinstance(room.id, uuid.UUID), "room.id is actually of type {}".format(str(type(room.id)))
         assert room.arenasize == models.DEFAULT_ARENA_SIZE
 
-    def test_playeradd(self, room):
-        assert room.players.add("testplayer")
-        room.save()
-        assert "testplayer" in room.players
-        room.players.remove("testplayer")
-        assert "testplayer" not in room.players
+    def test_add_player_byinstance(self, room):
+        player = models.Player.new()
+        player = room.add_player(player)
+        assert player.id in room.players
+        assert player.room == room.id
+
+    def test_add_player_byuuid(self, room):
+        player = models.Player.new().id
+        player = room.add_player(player)
+        assert player.id in room.players
+        assert player.room == room.id
+
+    def test_remove_player_byuuid(self, room):
+        player = models.Player.new()
+        room.add_player(player)
+        room.remove_player(player.id)
+        assert len(room.players) == 0
+
+    def test_remove_player_byinstance(self, room):
+        player = models.Player.new()
+        room.add_player(player.id)
+        room.remove_player(player)
+        assert len(room.players) == 0
 
     def test_specadd(self, room):
         assert room.spectators.add("testspectator")
@@ -50,11 +67,28 @@ class TestRoom:
         # Check that number of balls in redis is net unchanged
         assert len(list(models.Ball.all())) == balls_in_redis
 
+    def test_add_player(self, room):
+        num = 5
+        for i in range(num):
+            player = models.Player.new()
+            room.add_player(player.id)
+        assert len(room.players) == num
+        for i in range(num):
+            room.add_player(models.Player.new())
+        assert len(room.players) == num + num
+
     def test_uniqueness(self, room):
         room2 = models.Room.new()
         assert room.id != room2.id
         room2.delete()
-
+'''
+    def test_json(self, room):
+        ball = room.add_ball()
+        room.add_player(models.Player.new().id)
+        print(room.to_json())
+        room.delete_ball(ball.id)
+        assert 1 is None
+'''
 
 class TestBall:
     @pytest.fixture(scope='function')
