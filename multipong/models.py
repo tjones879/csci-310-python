@@ -128,8 +128,12 @@ class Room(walrus.Model):
         '''Add a player to the room by id or instance and set their room field.
 
         Return the updated Player instance loaded from redis.
-        id -- Type uuid or Player
+        id -- Type uuid.UUID or Player
         '''
+        if not (isinstance(player, Player) or isinstance(player, uuid.UUID)):
+                raise TypeError("Parameter must be of type"
+                                "multipong.model.Player or uuid.UUID,"
+                                "not {}".format(type(player)))
         if isinstance(player, Player):
             player = player.id
         self.players.add(player)
@@ -138,6 +142,10 @@ class Room(walrus.Model):
 
     def remove_player(self, player) -> Player:
         '''Remove player from room but do not delete instance.'''
+        if not (isinstance(player, Player) or isinstance(player, uuid.UUID)):
+                raise TypeError("Parameter must be of type"
+                                "multipong.model.Player or uuid.UUID,"
+                                "not {}".format(type(player)))
         if isinstance(player, Player):
             player = player.id
         self.players.remove(player)
