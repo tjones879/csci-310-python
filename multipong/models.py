@@ -8,6 +8,7 @@ from json import JSONEncoder
 DEFAULT_ARENA_SIZE = 1000
 BALL_TYPES = ["normal"]
 MAX_SPEED = 25
+NULL_UUID = uuid.uuid4()
 
 
 def as_int(obj) -> int:
@@ -26,7 +27,7 @@ class Ball(walrus.Model):
         ball.vector['x'] = random.randint(-MAX_SPEED, MAX_SPEED)
         ball.vector['y'] = random.randint(-MAX_SPEED, MAX_SPEED)
         ball.save()
-        return ball
+        return Ball.load(ball.id)
 
     def to_json(self):
         '''Recursively convert fields to json-friendly output.
@@ -65,31 +66,65 @@ class Ball(walrus.Model):
 
 class Player(walrus.Model):
     @staticmethod
-    def new():
+    def new() -> 'Player':
         player = Player.create(
-            id=uuid.uuid4()
+            id=uuid.uuid4(),
+            room=NULL_UUID,
+            username="",
+            score=0,
         )
-        return player
+        player.paddle['x'] = 500
+        player.paddle['y'] = 500
+        player.save()
+        return Player.load(player.id)
+
+    def set_room(self, room: uuid) -> 'Player':
+        self.room = room
+        self.save()
+        return Player.load(self.id)
 
     def to_json(self):
-        return dict(id=str(self.id))
+        '''Recursively convert fields to json-friendly output.
+
+        Return a dict with the following schema:
+        {
+          id: "uuid",
+          score: int,
+          paddle: {
+            x: int,
+            y: int,
+            },
+        }
+        '''
+        return dict(
+                id=str(self.id),
+                score=self.score,
+                paddle=dict(
+                    x=as_int(self.paddle['x']),
+                    y=as_int(self.paddle['y']),
+                    ),
+                )
 
     __database__ = walrus_conn
     id = walrus.UUIDField(primary_key=True, index=True)
+    room = walrus.UUIDField()
+    username = walrus.TextField()
+    score = walrus.IntegerField()
+    paddle = walrus.HashField()
+    '''
+    TODO: Throws ValueError: badly formed hexadecimal UUID string if **ANY**
+          UUIDField is not set
     sid = walrus.UUIDField()  # uuid.UUID(session.sid)
-    room = walrus.UUIDField()  # <uuid>
-    paddle = walrus.HashField()  # {pos: <int>, width: <int>}
-    username = walrus.TextField()  # <str>
-    score = walrus.Field()  # int
     # {email: <str>, topscore: <int>, rank: <int>}
     reginfo = walrus.HashField()
+    '''
 
 
 class Room(walrus.Model):
     @staticmethod
     def new() -> 'Room':
         room = Room.create(
-                id=uuid.uuid4()
+            id=uuid.uuid4()
         )
         return room
 
@@ -104,8 +139,7 @@ class Room(walrus.Model):
         self.players.add(player)
         # Set player's room field and save
         added = Player.load(player)
-        added.room = self.id
-        added.save()
+        added = added.set_room(self.id)
         return added
 
     def remove_player(self, player):
@@ -139,6 +173,11 @@ class Room(walrus.Model):
         }
         '''
         all_balls = range(len(list(self.balls)))
+        print("self", self.id)
+        for i in self.players:
+            id = uuid.UUID(i.decode('utf-8'))
+            print(id)
+            print(Player.load(id))
         return dict(
                 id=str(self.id),
                 balls=list(map(
