@@ -28,6 +28,14 @@ class TestRoom:
         assert player.id in room.players
         assert player.room == room.id
 
+    def test_add_player_wrongtype(self, room):
+        with pytest.raises(TypeError):
+            room.add_player(5)
+
+    def test_remove_player_wrongtype(self, room):
+        with pytest.raises(TypeError):
+            room.remove_player(9)
+
     def test_remove_player_byuuid(self, room):
         player = models.Player.new()
         room.add_player(player)
