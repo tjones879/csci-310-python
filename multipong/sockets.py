@@ -59,14 +59,13 @@ def recv_playerdata(data):
 def toggledebug():
     app.config['DEBUG_MODE'] = not app.config['DEBUG_MODE']
 
-
 @socketio.on('roomjoin')
 def roomjoin():
     if bool(app.config['DEBUG_MODE']):
         print("EVENT: roomjoin:", session.sid, session)
     isPlayer = session.get('username') is not None
     if session.get('room') is None:
-        rooms = list(Room.all())
+        rooms = [r for r in Room.all()]
         if len(rooms) < 1:  # case: no rooms on server
             Room.create()
             rooms = list(Room.all())
