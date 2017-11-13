@@ -66,12 +66,13 @@ class Ball(walrus.Model):
 
 class Player(walrus.Model):
     @staticmethod
-    def new() -> 'Player':
+    def new(session_id=uuid.uuid4()) -> 'Player':
         player = Player.create(
             id=uuid.uuid4(),
             room=NULL_UUID,
             username="",
             score=0,
+            sid=session_id,
         )
         player.paddle['x'] = 500
         player.paddle['y'] = 500
@@ -111,13 +112,8 @@ class Player(walrus.Model):
     username = walrus.TextField()
     score = walrus.IntegerField()
     paddle = walrus.HashField()
-    '''
-    TODO: Throws ValueError: badly formed hexadecimal UUID string if **ANY**
-          UUIDField is not set
-    sid = walrus.UUIDField()  # uuid.UUID(session.sid)
-    # {email: <str>, topscore: <int>, rank: <int>}
-    reginfo = walrus.HashField()
-    '''
+    sid = walrus.UUIDField()
+    # TODO: reginfo = walrus.HashField()
 
 
 class Room(walrus.Model):
@@ -137,17 +133,15 @@ class Room(walrus.Model):
         if isinstance(player, Player):
             player = player.id
         self.players.add(player)
-        # Set player's room field and save
-        added = Player.load(player)
-        added = added.set_room(self.id)
+        added = Player.load(player).set_room(self.id)
         return added
 
-    def remove_player(self, player):
+    def remove_player(self, player) -> Player:
         '''Remove player from room but do not delete instance.'''
         if isinstance(player, Player):
             player = player.id
         self.players.remove(player)
-        # TODO: Set room to invalid uuid
+        return Player.load(player).set_room(NULL_UUID)
 
     def add_ball(self) -> Ball:
         ball = Ball.new()
@@ -172,31 +166,25 @@ class Room(walrus.Model):
           players: [<see Player.to_json()>]
         }
         '''
-        all_balls = range(len(list(self.balls)))
-        print("self", self.id)
-        for i in self.players:
-            id = uuid.UUID(i.decode('utf-8'))
-            print(id)
-            print(Player.load(id))
+        as_uuid = lambda obj: uuid.UUID(obj.decode('utf-8'))
         return dict(
                 id=str(self.id),
                 balls=list(map(
-                    lambda index: self.ball_at(index).to_json(),
-                    all_balls)),
+                    lambda ball: Ball.load(ball).to_json(),
+                    map(as_uuid, self.balls))),
                 players=list(map(
-                    lambda player: player.to_json(),
-                    map(lambda i: Player.load(uuid.UUID(i.decode('utf-8'))),
-                        self.players))
-                ))
+                    lambda player: Player.load(player).to_json(),
+                    map(as_uuid, self.players))),
+                )
 
     __database__ = walrus_conn
     id = walrus.UUIDField(primary_key=True, index=True)
-    balls = walrus.ListField()  # [ <uuid>, ... ]
-    players = walrus.SetField()  # [ <uuid>, ... ]
-    spectators = walrus.SetField()  # [ <uuid>, ... ]
+    balls = walrus.ListField()
+    players = walrus.SetField()
+    spectators = walrus.SetField()
     # [ {playerid: <uuid>, score: <int>}, ... ]
     leaderboard = walrus.SetField()
-    arenasize = walrus.IntegerField(default=DEFAULT_ARENA_SIZE)  # <int>
+    arenasize = walrus.IntegerField(default=DEFAULT_ARENA_SIZE)
 
 
 class RoomEncoder(JSONEncoder):
