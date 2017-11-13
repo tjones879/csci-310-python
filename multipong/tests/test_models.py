@@ -67,27 +67,19 @@ class TestRoom:
         # Check that number of balls in redis is net unchanged
         assert len(list(models.Ball.all())) == balls_in_redis
 
-    def test_add_player(self, room):
-        num = 5
-        for i in range(num):
-            player = models.Player.new()
-            room.add_player(player.id)
-        assert len(room.players) == num
-        for i in range(num):
-            room.add_player(models.Player.new())
-        assert len(room.players) == num + num
-
     def test_uniqueness(self, room):
         room2 = models.Room.new()
         assert room.id != room2.id
         room2.delete()
+
 '''
     def test_json(self, room):
         ball = room.add_ball()
-        room.add_player(models.Player.new().id)
+        player = room.add_player(models.Player.new())
         print(room.to_json())
+        room.remove_player(player.id)
+        models.Player.delete(player)
         room.delete_ball(ball.id)
-        assert 1 is None
 '''
 
 class TestBall:
