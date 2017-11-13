@@ -72,15 +72,14 @@ class TestRoom:
         assert room.id != room2.id
         room2.delete()
 
-'''
     def test_json(self, room):
         ball = room.add_ball()
         player = room.add_player(models.Player.new())
-        print(room.to_json())
+        print(json.dumps(room, cls=models.RoomEncoder))
         room.remove_player(player.id)
         models.Player.delete(player)
         room.delete_ball(ball.id)
-'''
+
 
 class TestBall:
     @pytest.fixture(scope='function')
