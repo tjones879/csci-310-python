@@ -79,7 +79,7 @@ class Player(walrus.Model):
         player.save()
         return Player.load(player.id)
 
-    def set_room(self, room: uuid) -> 'Player':
+    def set_room(self, room: uuid.UUID) -> 'Player':
         self.room = room
         self.save()
         return Player.load(self.id)
@@ -148,7 +148,7 @@ class Room(walrus.Model):
         self.balls.append(ball.id)
         return ball
 
-    def delete_ball(self, uid: uuid):
+    def delete_ball(self, uid: uuid.UUID):
         del self.balls[uid]
         Ball.load(uid).delete()
 
