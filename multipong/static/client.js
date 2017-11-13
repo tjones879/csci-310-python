@@ -7,30 +7,22 @@ var Client = new function(){
         socket.on('gamedata', onGameData);
         socket.on('toggledebug', onToggleDebug);
         socket.on('debug', onDebug);
-        
-        //OLDSTUFF
-        //socket.on('tick', tick);
-        //socket.on('roomupdate', Client.roomUpdate);
-        //socket.on('askusername', Client.askUsername);
-        //socket.on('playerready', Client.playerReady);
-        //socket.on('roomjoin', Client.roomJoin);
-        //</Event Registration>
+
         socket.on('connect', function() {
             console.log("connected");
             //start the background game loop
         });
     }
-    
+
     //<Event Handlers>
     function onGameData(data) {
         app.onGameData(data);
-        console.log("Data");
     }
-    
+
     function onDebug(data) {
         console.log(data);
     }
-    
+
     function onToggleDebug(data) {
         if (data.debug) {
             app.toggleDebugMode();
@@ -39,12 +31,12 @@ var Client = new function(){
     this.logInUser = function(username) {
         socket.emit('login', {"username": username});
     };
-    
+
     this.logOutUser = function() {
         socket.emit('logout');
     };
     //</Event Handlers>
-    
+
     //OLD STUFF
     // outgoing events
     /*

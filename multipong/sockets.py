@@ -1,9 +1,12 @@
+from inspect import getmembers
+from pprint import pprint
 from multipong import socketio, app
 from flask import request, session
 from flask_socketio import emit, join_room, leave_room
 from multipong.models import Room
 import uuid
 import re
+import random
 
 MAX_ROOM_SIZE = 10  # maximum of 10 players/specs per room
 
@@ -14,19 +17,81 @@ def handle_connect():
         emit('toggledebug', {'debug': True})
         print('EVENT: connected', session.sid, session)
     roomjoin()
+    send_gamedata('init')
 
+@socketio.on('disconnect')
+def handle_disconnect():
+    roomleave()
 
 @socketio.on('gamedata')
 def send_gamedata(action='update'):
     roomid = session.get('room')
+    xDir = random.choice([-1, 1])
+    yDir = random.choice([-1, 1])
+    xVec = random.randint(50, 150) * xDir
+    yVec = random.randint(50, 150) * yDir
     roomdata = {
         "action": action,
         "id": str(roomid),
         "balls": [
             {
                 'id': "wqaepiguhqawepri",
-                'pos': {'x': 69, 'y': 96},
-                'vec': {'x': 80, 'y': 80},
+                'pos': {'x': 500, 'y': 500},
+                'vec': {'x': xVec, 'y': yVec},
+                'type': "normal"
+            },
+            {
+                'id': "wqaepiguhqawepra",
+                'pos': {'x': 500, 'y': 500},
+                'vec': {'x': xVec+7, 'y': yVec- 10},
+                'type': "normal"
+            },
+            {
+                'id': "wqaepiguhqaweprb",
+                'pos': {'x': 500, 'y': 500},
+                'vec': {'x': xVec*5, 'y': yVec/5},
+                'type': "normal"
+            },
+            {
+                'id': "wqaepiguhqaweprc",
+                'pos': {'x': 500, 'y': 500},
+                'vec': {'x': xVec/-13, 'y': yVec*-13},
+                'type': "normal"
+            },
+            {
+                'id': "wqaepiguhqaweprd",
+                'pos': {'x': 500, 'y': 500},
+                'vec': {'x': xVec/-3, 'y': yVec/-3},
+                'type': "normal"
+            },
+            {
+                'id': "wqaepiguhqawepre",
+                'pos': {'x': 500, 'y': 500},
+                'vec': {'x': xVec*13, 'y': yVec*-13},
+                'type': "normal"
+            },
+            {
+                'id': "wqaepiguhqaweprf",
+                'pos': {'x': 500, 'y': 500},
+                'vec': {'x': xVec*7, 'y': yVec/6},
+                'type': "normal"
+            },
+            {
+                'id': "wqaepiguhqaweprg",
+                'pos': {'x': 500, 'y': 500},
+                'vec': {'x': xVec*2, 'y': yVec*1.5},
+                'type': "normal"
+            },
+            {
+                'id': "wqaepiguhqaweprh",
+                'pos': {'x': 500, 'y': 500},
+                'vec': {'x': xVec*-1, 'y': yVec*2},
+                'type': "normal"
+            },
+            {
+                'id': "wqaepiguhqaweprj",
+                'pos': {'x': 500, 'y': 500},
+                'vec': {'x': xVec/2, 'y': yVec/3},
                 'type': "normal"
             },
         ],
@@ -138,7 +203,6 @@ def handle_newplayer(data):
             roomjoin()
         session['username'] = validate_username(data.get('username'))
         # update room with new player
-        send_gamedata(action='init')
         if app.config['DEBUG_MODE']:
             emit('debug', {'msg': "{} connected".format(session['username'])})
             print(data.get('username'), 'logged in')
@@ -148,5 +212,4 @@ def handle_newplayer(data):
 def user_logout():
     if app.config['DEBUG_MODE']:
         print('EVENT: logout:', session.get('username'), session.sid)
-    roomleave()
     session.clear()
