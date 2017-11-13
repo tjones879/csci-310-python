@@ -26,8 +26,10 @@ def handle_disconnect():
 @socketio.on('gamedata')
 def send_gamedata(action='update'):
     roomid = session.get('room')
-    xVec = 1;
-    yVec = -1;
+    xDir = random.choice([-1, 1])
+    yDir = random.choice([-1, 1])
+    xVec = random.randint(50, 150) * xDir
+    yVec = random.randint(50, 150) * yDir
     roomdata = {
         "action": action,
         "id": str(roomid),
