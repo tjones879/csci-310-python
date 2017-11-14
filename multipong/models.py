@@ -23,10 +23,10 @@ class Ball(walrus.Model):
             id=uuid.uuid4(),
             ballType=random.choice(BALL_TYPES)
         )
-        ball.position['x'] = 500
-        ball.position['y'] = 500
         ball.vector['x'] = random.randint(MIN_SPEED, MAX_SPEED) * random.choice([-1, 1])
         ball.vector['y'] = random.randint(MIN_SPEED, MAX_SPEED) * random.choice([-1, 1])
+        ball.position['x'] = 500 + as_int(ball.vector['x'])
+        ball.position['y'] = 500 + as_int(ball.vector['y'])
         ball.save()
         return Ball.load(ball.id)
 
