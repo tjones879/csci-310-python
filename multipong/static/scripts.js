@@ -6,8 +6,8 @@ function App(){
   var pongBalls = new Array();
   var debug = false;
   var LOOP = null;
-  var paddleAudio = new Audio('static/paddle-hit.wav');
-  var wallAudio = new Audio('static/wall-hit.wav');
+  var paddleAudio = new Audio('static/audio/paddle-hit.wav');
+  var wallAudio = new Audio('static/audio/wall-hit.wav');
 
   //Initial state of the game... not logged in
   this.init = function(){

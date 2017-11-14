@@ -7,6 +7,7 @@ var Client = new function(){
         socket.on('gamedata', onGameData);
         socket.on('toggledebug', onToggleDebug);
         socket.on('debug', onDebug);
+        socket.on('serverUpdate', onServerUpdate);
 
         socket.on('connect', function() {
             console.log("connected");
@@ -28,6 +29,9 @@ var Client = new function(){
             app.toggleDebugMode();
         }
     }
+    function onServerUpdate(data){
+        
+    }
     this.logInUser = function(username) {
         socket.emit('login', {"username": username});
     };
@@ -35,6 +39,14 @@ var Client = new function(){
     this.logOutUser = function() {
         socket.emit('logout');
     };
+    
+    this.clientUpdate = function(){
+        socket.emit('clientUpdate');
+    }
+    
+    this.ballHit = function(){
+        socket.emit('ballHit');
+    }
     //</Event Handlers>
 
     //OLD STUFF
