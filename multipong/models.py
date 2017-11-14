@@ -7,7 +7,8 @@ from json import JSONEncoder
 
 DEFAULT_ARENA_SIZE = 1000
 BALL_TYPES = ["normal"]
-MAX_SPEED = 25
+MIN_SPEED = 50
+MAX_SPEED = 150
 NULL_UUID = uuid.uuid4()
 
 
@@ -24,8 +25,8 @@ class Ball(walrus.Model):
         )
         ball.position['x'] = 500
         ball.position['y'] = 500
-        ball.vector['x'] = random.randint(-MAX_SPEED, MAX_SPEED)
-        ball.vector['y'] = random.randint(-MAX_SPEED, MAX_SPEED)
+        ball.vector['x'] = random.randint(MIN_SPEED, MAX_SPEED) * random.choice([-1, 1])
+        ball.vector['y'] = random.randint(MIN_SPEED, MAX_SPEED) * random.choice([-1, 1])
         ball.save()
         return Ball.load(ball.id)
 
@@ -66,11 +67,11 @@ class Ball(walrus.Model):
 
 class Player(walrus.Model):
     @staticmethod
-    def new(session_id=uuid.uuid4()) -> 'Player':
+    def new(session_id=uuid.uuid4(), user="DUMMY") -> 'Player':
         player = Player.create(
             id=uuid.uuid4(),
             room=NULL_UUID,
-            username="",
+            username=user,
             score=0,
             sid=session_id,
         )
@@ -159,6 +160,9 @@ class Room(walrus.Model):
     def delete_ball(self, uid: uuid.UUID):
         del self.balls[uid]
         Ball.load(uid).delete()
+
+    def pop_last_ball(self):
+        self.balls.popright()
 
     def ball_at(self, index: int) -> Ball:
         ball_id = uuid.UUID(self.balls[index].decode('utf-8'))

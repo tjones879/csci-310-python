@@ -69,7 +69,14 @@ function App(){
     return false;
   }
 
-  this.onGameData = function(data){
+  this.forceUpdate = function(data){
+    //Clear current client game state then update
+    pongBalls = new Array();
+    this.cycleUpdate(data);
+  }
+
+  this.cycleUpdate = function(data){
+    //update the balls
     for(var a = 0; a < data.balls.length; a++){
       if(!haveBall(data.balls[a].id)){
         ball = new Ball();
@@ -85,10 +92,13 @@ function App(){
       }
     }
 
-    if(data.action == "init"){
-      ui.setRoom(data.id);
-      setTimeout(loop, 10);
-    }
+    //update player paddle positions
+  }
+
+  this.initUpdate = function(data){
+    ui.setRoom(data.id);
+    this.cycleUpdate(data);
+    setTimeout(loop, 10);
   }
 }
 

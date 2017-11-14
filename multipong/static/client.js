@@ -4,7 +4,6 @@ var Client = new function(){
     
     this.init = function(){
         //<Event Registration
-        socket.on('gamedata', onGameData);
         socket.on('toggledebug', onToggleDebug);
         socket.on('debug', onDebug);
         socket.on('serverUpdate', onServerUpdate);
@@ -30,7 +29,12 @@ var Client = new function(){
         }
     }
     function onServerUpdate(data){
-        
+        if(data.action == 'init')
+          app.initUpdate(data);
+        else if(data.action == 'cycleUpdate')
+          app.cycleUpdate(data);
+        else if(data.action == 'forceUpdate')
+          app.forceUpdate(data);
     }
     this.logInUser = function(username) {
         socket.emit('login', {"username": username});

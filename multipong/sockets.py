@@ -17,7 +17,7 @@ def handle_connect():
     print('EVENT: connected', session.sid, session)
     roomjoin()
     
-    send_gamedata('init')
+    serverUpdate('init')
 
 
 @socketio.on('disconnect')
@@ -28,8 +28,8 @@ def handle_disconnect():
     roomleave()
 
 
-@socketio.on('gamedata')
-def send_gamedata(action='cycleUpdate'):
+@socketio.on('serverUpdate')
+def serverUpdate(action='cycleUpdate'):
     roomid = session.get('room')
     room = Room.load(roomid)
     
@@ -39,7 +39,10 @@ def send_gamedata(action='cycleUpdate'):
     
     # collect room data and send back to client
     pprint(j)
-    emit('gamedata', j)
+    if action == 'init':
+      emit('serverUpdate', j)
+    else:
+      socketio.emit('serverUpdate', j)
 
 
 @socketio.on('playerdata')
@@ -142,7 +145,7 @@ def handle_newplayer(data):
         numBalls = len(room.balls)
         if numPlayers > numBalls:
             room.add_ball()
-        send_gamedata('new-player')
+        serverUpdate('forceUpdate')
         
         if app.config['DEBUG_MODE']:
             emit('debug', {'msg': "{} connected".format(session['username'])})
@@ -151,17 +154,20 @@ def handle_newplayer(data):
 
 @socketio.on('logout')
 def user_logout():
-    if app.config['DEBUG_MODE']:
-        print('EVENT: logout:', session.get('username'), session.sid)
+    if 'player' in session and session['player'] is not None:
+        if app.config['DEBUG_MODE']:
+            print('EVENT: logout:', session.get('username'), session.sid)
+            
+        #update room with player leaving, number of balls reduceing etc.
+        room = Room.load(session['room'])
+        room.remove_player(session['player'])
+        player = Player.load(session['player'])
+        player.delete()
+        del session['player']
+        numPlayers = len(room.players)
+        numBalls = len(room.balls)
+        if numPlayers < numBalls:
+            room.pop_last_ball()
         
-    #update room with player leaving, number of balls reduceing etc.
-    room = Room.load(session['room'])
-    room.remove_player(session['player'])
-    player = Player.load(session['player'])
-    player.delete()
-    numPlayers = len(room.players)
-    numBalls = len(room.balls)
-    if numPlayers < numBalls:
-        room.pop_last_ball()
-        
+        serverUpdate(action = 'forceUpdate')
     
