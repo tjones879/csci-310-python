@@ -12,6 +12,15 @@ MAX_SPEED = 150
 NULL_UUID = uuid.uuid4()
 
 
+def update_ball(id: uuid.UUID, pos: dict, vec: dict):
+    ball = Ball.load(id)
+    ball.position['x'] = int(pos['x'])
+    ball.position['y'] = int(pos['y'])
+    ball.vector['x'] = vec['x']
+    ball.vector['y'] = vec['y']
+    ball.save()
+
+
 def as_int(obj) -> int:
     return int(obj.decode('utf-8'))
 

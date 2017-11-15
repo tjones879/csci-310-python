@@ -2,10 +2,11 @@ from pprint import pprint
 from multipong import socketio, app
 from flask import request, session
 from flask_socketio import emit, join_room, leave_room
-from multipong.models import Room, Player
+from multipong.models import Room, Player, update_ball
 import uuid
 import re
 import random
+import json
 
 MAX_ROOM_SIZE = 10  # maximum of 10 players/specs per room
 
@@ -49,10 +50,13 @@ def serverUpdate(action='cycleUpdate'):
 def clientUpdate(data):
     #    if bool(app.config['DEBUG_MODE']):
     print('EVENT: clientUpdate: ', data)
-    roomid = session['room']
+    data = json.loads(data)
+    for b in data['balls']:
+        update_ball(b["id"], b["pos"], b["vec"])
 
     # collect room data from each player
     # Once all players data collected find average and emit serverUpdate('forceUpdate') to all players
+    serverUpdate()
 
 
 @socketio.on('toggledebug')
