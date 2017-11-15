@@ -1,6 +1,4 @@
 //App class to control the flow of the game and overall game components
-/*global ui*/
-/*global Client*/
 function App(){
   //initialize public variables
   var pongBalls = new Array();
@@ -10,8 +8,10 @@ function App(){
   var wallAudio = new Audio('static/audio/wall-hit.wav');
   var previousTime = new Date().getTime();
   var frameTime = new Date().getTime();
+  var updateTime = new Date().getTime();
   this.elapsedTime = 0;
   var frames = 0;
+  var logedIn = false;
 
   //Initial state of the game... not logged in
   this.init = function(){
@@ -33,6 +33,10 @@ function App(){
         }
         else
           wallAudio.play();
+        if(pongBalls[a].pos.x >= ui.arenaSize)
+          pongBalls[a].pos.x = ui.arenaSize - 1;
+        if(pongBalls[a].pos.x < 0)
+          pongBalls[a].pos.x = 0;
         pongBalls[a].vec.x *= -1;
       }
       if(pongBalls[a].pos.y >= ui.arenaSize || pongBalls[a].pos.y < 0){
@@ -42,18 +46,31 @@ function App(){
         }
         else
           wallAudio.play();
+        if(pongBalls[a].pos.y >= ui.arenaSize)
+          pongBalls[a].pos.y = ui.arenaSize - 1;
+        if(pongBalls[a].pos.y < 0)
+          pongBalls[a].pos.y = 0;
         pongBalls[a].vec.y *= -1;
       }
     }
+    evalFps();
+    if(logedIn)
+      evalClientUpdate();
     ui.updateCanvas(pongBalls);
-    setTimeout(loop, 20);
+    LOOP = setTimeout(loop, 10);
   }
 
+  //calculte the elapsed time for use in frame independent logic
   var getElapsedTime = function(){
     var currentTime = new Date().getTime();
     this.elapsedTime = currentTime - previousTime;
     this.elapsedTime /= 1000;
     previousTime = currentTime;
+  }
+
+  //check and reset fps vars, display fps value in debug window
+  var evalFps = function(){
+    var currentTime = new Date().getTime();
     if(currentTime - frameTime >= 1000){
       frameTime = currentTime;
       console.log('fps', frames);
@@ -62,16 +79,30 @@ function App(){
     frames++;
   }
 
+  //check to see if it is time to send a client update to server
+  //if it is then send it.
+  var evalClientUpdate = function(){
+    var currentTime = new Date().getTime();
+    if(currentTime - updateTime >= 1000){
+      updateTime = currentTime;
+      Client.sendClientUpdate();
+      console.log('client update');
+    }
+  }
+
+
   //Happens on login form submission
   this.logInUser = function(){
     ui.logInUser();
     Client.logInUser(ui.user);
+    logedIn = true;
   }
 
   //Happens on close button click
   this.logOutUser = function(){
     ui.logOutUser();
     Client.logOutUser();
+    logedIn = false;
   }
 
   //Toggles Popup showing framerate keycodes and other usefull info
@@ -87,12 +118,16 @@ function App(){
     return false;
   }
 
+  //function fired on forced serverUpdate action=forceUpdate
+  //tells client to reinitialize game data including players, leaderboard and balls
   this.forceUpdate = function(data){
     //Clear current client game state then update
     pongBalls = new Array();
     this.cycleUpdate(data);
   }
 
+  //function fired on normal serverUpdate action=cycleUpdate
+  //just to update ball and player paddle positions
   this.cycleUpdate = function(data){
     //update the balls
     for(var a = 0; a < data.balls.length; a++){
@@ -113,10 +148,16 @@ function App(){
     //update player paddle positions
   }
 
+  //function fired on socket serverUpdate action=initUpdate
+  //To set up spectator on page load
   this.initUpdate = function(data){
     ui.setRoom(data.id);
     this.cycleUpdate(data);
-    setTimeout(loop, 10);
+    loop();
+  }
+
+  this.getBalls = function(){
+    return pongBalls;
   }
 }
 

@@ -44,8 +44,9 @@ var Client = new function(){
         socket.emit('logout');
     };
     
-    this.clientUpdate = function(){
-        socket.emit('clientUpdate');
+    this.sendClientUpdate = function(){
+        var j = '{"balls" : ' + JSON.stringify(app.getBalls()) + '}';
+        socket.emit('clientUpdate', j);
     }
     
     this.ballHit = function(){

@@ -45,12 +45,15 @@ def serverUpdate(action='cycleUpdate'):
       socketio.emit('serverUpdate', j)
 
 
-@socketio.on('playerdata')
-def recv_playerdata(data):
-    if bool(app.config['DEBUG_MODE']):
-        print('EVENT: playerdata: ', data)
+@socketio.on('clientUpdate')
+def clientUpdate(data):
+#    if bool(app.config['DEBUG_MODE']):
+    print('EVENT: clientUpdate: ', data)
     roomid = session['room']
-    # update room with player's new data
+
+    #collect room data from each player
+    #Once all players data collected find average and emit serverUpdate('forceUpdate') to all players
+
 
 
 @socketio.on('toggledebug')
