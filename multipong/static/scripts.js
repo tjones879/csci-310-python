@@ -8,6 +8,10 @@ function App(){
   var LOOP = null;
   var paddleAudio = new Audio('static/audio/paddle-hit.wav');
   var wallAudio = new Audio('static/audio/wall-hit.wav');
+  var previousTime = new Date().getTime();
+  var frameTime = new Date().getTime();
+  this.elapsedTime = 0;
+  var frames = 0;
 
   //Initial state of the game... not logged in
   this.init = function(){
@@ -18,9 +22,10 @@ function App(){
 
   //The game loop
   var loop = function(){
+    getElapsedTime();
     for(var a = 0; a < pongBalls.length; a++){
-      pongBalls[a].pos.x += pongBalls[a].vec.x / 60;
-      pongBalls[a].pos.y += pongBalls[a].vec.y / 60;
+      pongBalls[a].pos.x += pongBalls[a].vec.x * this.elapsedTime;
+      pongBalls[a].pos.y += pongBalls[a].vec.y * this.elapsedTime;
       if(pongBalls[a].pos.x >= ui.arenaSize || pongBalls[a].pos.x < 0){
         if(player.hitBall(pongBalls[a].pos.x, pongBalls[a].pos.y)){
           paddleAudio.play();
@@ -41,7 +46,20 @@ function App(){
       }
     }
     ui.updateCanvas(pongBalls);
-    setTimeout(loop, 10);
+    setTimeout(loop, 20);
+  }
+
+  var getElapsedTime = function(){
+    var currentTime = new Date().getTime();
+    this.elapsedTime = currentTime - previousTime;
+    this.elapsedTime /= 1000;
+    previousTime = currentTime;
+    if(currentTime - frameTime >= 1000){
+      frameTime = currentTime;
+      console.log('fps', frames);
+      frames = 0;
+    }
+    frames++;
   }
 
   //Happens on login form submission
@@ -192,7 +210,7 @@ function Ui(){
   var processAppInput = function(event){
     if(new Date() - keytime > 10){
       keytime = new Date();
-      console.log(keytime);
+      //console.log(keytime);
       //input if user is logged in
       if(!loginForm.classList.contains("visible")){
         console.log(event.keyCode);
