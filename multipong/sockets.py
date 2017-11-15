@@ -16,7 +16,7 @@ def handle_connect():
         emit('toggledebug', {'debug': True})
     print('EVENT: connected', session.sid, session)
     roomjoin()
-    
+
     serverUpdate('init')
 
 
@@ -32,28 +32,27 @@ def handle_disconnect():
 def serverUpdate(action='cycleUpdate'):
     roomid = session.get('room')
     room = Room.load(roomid)
-    
+
     room.save()
     j = Room.load(roomid).to_json()
     j['action'] = action
-    
+
     # collect room data and send back to client
     pprint(j)
     if action == 'init':
-      emit('serverUpdate', j)
+        emit('serverUpdate', j)
     else:
-      socketio.emit('serverUpdate', j)
+        socketio.emit('serverUpdate', j)
 
 
 @socketio.on('clientUpdate')
 def clientUpdate(data):
-#    if bool(app.config['DEBUG_MODE']):
+    #    if bool(app.config['DEBUG_MODE']):
     print('EVENT: clientUpdate: ', data)
     roomid = session['room']
 
-    #collect room data from each player
-    #Once all players data collected find average and emit serverUpdate('forceUpdate') to all players
-
+    # collect room data from each player
+    # Once all players data collected find average and emit serverUpdate('forceUpdate') to all players
 
 
 @socketio.on('toggledebug')
@@ -138,7 +137,7 @@ def handle_newplayer(data):
         if session.get('room') is None:
             roomjoin()
         session['username'] = validate_username(data.get('username'))
-        
+
         # update room with new player, balls and send new-player game data
         room = Room.load(session['room'])
         player = Player.new(session_id=session.sid, user=data.get('username'))
@@ -149,7 +148,7 @@ def handle_newplayer(data):
         if numPlayers > numBalls:
             room.add_ball()
         serverUpdate('forceUpdate')
-        
+
         if app.config['DEBUG_MODE']:
             emit('debug', {'msg': "{} connected".format(session['username'])})
             print(data.get('username'), 'logged in')
@@ -160,8 +159,8 @@ def user_logout():
     if 'player' in session and session['player'] is not None:
         if app.config['DEBUG_MODE']:
             print('EVENT: logout:', session.get('username'), session.sid)
-            
-        #update room with player leaving, number of balls reduceing etc.
+
+        # update room with player leaving, number of balls reduceing etc.
         room = Room.load(session['room'])
         room.remove_player(session['player'])
         player = Player.load(session['player'])
@@ -171,6 +170,5 @@ def user_logout():
         numBalls = len(room.balls)
         if numPlayers < numBalls:
             room.pop_last_ball()
-        
-        serverUpdate(action = 'forceUpdate')
-    
+
+        serverUpdate(action='forceUpdate')
