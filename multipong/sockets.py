@@ -1,9 +1,12 @@
+from pprint import pprint
 from multipong import socketio, app
 from flask import request, session
 from flask_socketio import emit, join_room, leave_room
-from multipong.models import Room
+from multipong.models import Room, Player, update_ball
 import uuid
 import re
+import random
+import json
 
 MAX_ROOM_SIZE = 10  # maximum of 10 players/specs per room
 
@@ -12,52 +15,54 @@ MAX_ROOM_SIZE = 10  # maximum of 10 players/specs per room
 def handle_connect():
     if bool(app.config['DEBUG_MODE']):
         emit('toggledebug', {'debug': True})
-        print('EVENT: connected', session.sid, session)
+    print('EVENT: connected', session.sid, session)
     roomjoin()
 
+    serverUpdate('init')
 
-@socketio.on('gamedata')
-def send_gamedata(action='update'):
+
+@socketio.on('disconnect')
+def handle_disconnect():
+    print('EVENT: disconnect', session)
+    user_logout()
+    session.clear()
+    roomleave()
+
+
+@socketio.on('serverUpdate')
+def serverUpdate(action='cycleUpdate'):
     roomid = session.get('room')
-    roomdata = {
-        "action": action,
-        "id": str(roomid),
-        "balls": [
-            {
-                'id': "wqaepiguhqawepri",
-                'pos': {'x': 69, 'y': 96},
-                'vec': {'x': 80, 'y': 80},
-                'type': "normal"
-            },
-        ],
-        "players": [
-            {
-                'id': "piqaapohibapoe",
-                'paddle': {
-                    'pos': 500,
-                    'width': 100
-                },
-                'username': "wewlad",
-                'score': 0,
-                'rank': 0
-            },
-        ]
-    }
+    room = Room.load(roomid)
+
+    room.save()
+    j = Room.load(roomid).to_json()
+    j['action'] = action
+
     # collect room data and send back to client
-    emit('gamedata', roomdata)
+    pprint(j)
+    if action == 'init':
+        emit('serverUpdate', j)
+    else:
+        socketio.emit('serverUpdate', j)
 
 
-@socketio.on('playerdata')
-def recv_playerdata(data):
-    if bool(app.config['DEBUG_MODE']):
-        print('EVENT: playerdata: ', data)
-    roomid = session['room']
-    # update room with player's new data
+@socketio.on('clientUpdate')
+def clientUpdate(data):
+    #    if bool(app.config['DEBUG_MODE']):
+    print('EVENT: clientUpdate: ', data)
+    data = json.loads(data)
+    for b in data['balls']:
+        update_ball(b["id"], b["pos"], b["vec"])
+
+    # collect room data from each player
+    # Once all players data collected find average and emit serverUpdate('forceUpdate') to all players
+    serverUpdate()
 
 
 @socketio.on('toggledebug')
 def toggledebug():
     app.config['DEBUG_MODE'] = not app.config['DEBUG_MODE']
+
 
 @socketio.on('roomjoin')
 def roomjoin():
@@ -128,8 +133,7 @@ def validate_username(username: str) -> str:
 
 @socketio.on('login')
 def handle_newplayer(data):
-    if bool(app.config['DEBUG_MODE']):
-        print("EVENT: login: ", data, " :: ", session)
+    print("EVENT: login: ", data, " :: ", session)
     if data.get('username') is None or len(data.get('username')) < 1:
         # HAAX
         return False
@@ -137,8 +141,18 @@ def handle_newplayer(data):
         if session.get('room') is None:
             roomjoin()
         session['username'] = validate_username(data.get('username'))
-        # update room with new player
-        send_gamedata(action='init')
+
+        # update room with new player, balls and send new-player game data
+        room = Room.load(session['room'])
+        player = Player.new(session_id=session.sid, user=data.get('username'))
+        player = room.add_player(player)
+        session['player'] = player.id
+        numPlayers = len(room.players)
+        numBalls = len(room.balls)
+        if numPlayers > numBalls:
+            room.add_ball()
+        serverUpdate('forceUpdate')
+
         if app.config['DEBUG_MODE']:
             emit('debug', {'msg': "{} connected".format(session['username'])})
             print(data.get('username'), 'logged in')
@@ -146,7 +160,19 @@ def handle_newplayer(data):
 
 @socketio.on('logout')
 def user_logout():
-    if app.config['DEBUG_MODE']:
-        print('EVENT: logout:', session.get('username'), session.sid)
-    roomleave()
-    session.clear()
+    if 'player' in session and session['player'] is not None:
+        if app.config['DEBUG_MODE']:
+            print('EVENT: logout:', session.get('username'), session.sid)
+
+        # update room with player leaving, number of balls reduceing etc.
+        room = Room.load(session['room'])
+        room.remove_player(session['player'])
+        player = Player.load(session['player'])
+        player.delete()
+        del session['player']
+        numPlayers = len(room.players)
+        numBalls = len(room.balls)
+        if numPlayers < numBalls:
+            room.pop_last_ball()
+
+        serverUpdate(action='forceUpdate')

@@ -100,8 +100,10 @@ class TestBall:
     def test_create(self, ball):
         as_int = lambda obj: int(obj.decode('utf-8'))
         assert isinstance(ball.id, uuid.UUID)
-        assert as_int(ball.position['x']) == 500
-        assert as_int(ball.position['y']) == 500
+        assert as_int(ball.position['x']) <= 500 + models.MAX_SPEED
+        assert as_int(ball.position['x']) >= 500 - models.MAX_SPEED
+        assert as_int(ball.position['y']) <= 500 + models.MAX_SPEED
+        assert as_int(ball.position['y']) >= 500 - models.MAX_SPEED
         assert as_int(ball.vector['x']) >= -models.MAX_SPEED
         assert as_int(ball.vector['x']) <= models.MAX_SPEED
         assert as_int(ball.vector['y']) >= -models.MAX_SPEED

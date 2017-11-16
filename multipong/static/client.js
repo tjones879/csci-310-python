@@ -4,47 +4,56 @@ var Client = new function(){
     
     this.init = function(){
         //<Event Registration
-        socket.on('gamedata', onGameData);
         socket.on('toggledebug', onToggleDebug);
         socket.on('debug', onDebug);
-        
-        //OLDSTUFF
-        //socket.on('tick', tick);
-        //socket.on('roomupdate', Client.roomUpdate);
-        //socket.on('askusername', Client.askUsername);
-        //socket.on('playerready', Client.playerReady);
-        //socket.on('roomjoin', Client.roomJoin);
-        //</Event Registration>
+        socket.on('serverUpdate', onServerUpdate);
+
         socket.on('connect', function() {
             console.log("connected");
             //start the background game loop
         });
     }
-    
+
     //<Event Handlers>
     function onGameData(data) {
         app.onGameData(data);
-        console.log("Data");
     }
-    
+
     function onDebug(data) {
         console.log(data);
     }
-    
+
     function onToggleDebug(data) {
         if (data.debug) {
             app.toggleDebugMode();
         }
     }
+    function onServerUpdate(data){
+        if(data.action == 'init')
+          app.initUpdate(data);
+        else if(data.action == 'cycleUpdate')
+          app.cycleUpdate(data);
+        else if(data.action == 'forceUpdate')
+          app.forceUpdate(data);
+    }
     this.logInUser = function(username) {
         socket.emit('login', {"username": username});
     };
-    
+
     this.logOutUser = function() {
         socket.emit('logout');
     };
-    //</Event Handlers>
     
+    this.sendClientUpdate = function(){
+        var j = '{"balls" : ' + JSON.stringify(app.getBalls()) + '}';
+        socket.emit('clientUpdate', j);
+    }
+    
+    this.ballHit = function(){
+        socket.emit('ballHit');
+    }
+    //</Event Handlers>
+
     //OLD STUFF
     // outgoing events
     /*
