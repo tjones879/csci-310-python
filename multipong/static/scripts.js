@@ -156,6 +156,15 @@ function App(){
     loop();
   }
 
+  var getBall = function(id){
+    for(var a = 0; a < pongBalls.length; a++){
+      if(pongBalls[a].id == id)
+        return pongBalls[a];
+    }
+    return false
+  }
+
+  //returns the pongballs for use in JSON packaging in socket io
   this.getBalls = function(){
     return pongBalls;
   }
@@ -208,8 +217,8 @@ function Ui(){
 
   //In the event the user resizes browser
   var resize = function(){
-    screenWidth = window.innerWidth - 4;
-    screenHeight = window.innerHeight - 4;
+    screenWidth = window.innerWidth - 20;
+    screenHeight = window.innerHeight - 110;
     if(screenWidth < screenHeight){
       if(screenWidth < ui.arenaSize){
         screenScale = screenWidth / ui.arenaSize;
