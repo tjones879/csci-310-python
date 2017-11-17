@@ -12,10 +12,12 @@ MAX_SPEED = 150
 NULL_UUID = uuid.uuid4()
 
 
-def update_ball(id: uuid.UUID, pos: dict, vec: dict):
+def update_ball(id: uuid.UUID, pos: dict, vec: dict, latency: float):
+    if latency < 0:
+        latency = 0
     ball = Ball.load(id)
-    ball.position['x'] = int(pos['x'])
-    ball.position['y'] = int(pos['y'])
+    ball.position['x'] = float(pos['x']) + vec['x'] * latency
+    ball.position['y'] = float(pos['y']) + vec['y'] * latency
     ball.vector['x'] = vec['x']
     ball.vector['y'] = vec['y']
     ball.save()
@@ -23,6 +25,10 @@ def update_ball(id: uuid.UUID, pos: dict, vec: dict):
 
 def as_int(obj) -> int:
     return int(obj.decode('utf-8'))
+
+
+def as_float(obj) -> float:
+    return float(obj.decode('utf-8'))
 
 
 class Ball(walrus.Model):
@@ -59,8 +65,8 @@ class Ball(walrus.Model):
         return dict(
                 id=str(self.id),
                 pos=dict(
-                    x=as_int(self.position['x']),
-                    y=as_int(self.position['y'])),
+                    x=as_float(self.position['x']),
+                    y=as_float(self.position['y'])),
                 vec=dict(
                     x=as_int(self.vector['x']),
                     y=as_int(self.vector['y'])),

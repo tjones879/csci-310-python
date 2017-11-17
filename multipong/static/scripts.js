@@ -68,6 +68,15 @@ function App(){
     previousTime = currentTime;
   }
 
+  // Calculate the elapsed time from a unix timestamp from server
+  // Return 0 if the difference is negative
+  var getLatency = function(timestamp) {
+    var currentTime = new Date().getTime();
+    var latency = (currentTime / 1000) - timestamp;
+    latency = latency > 0 ? latency : 0;
+    return latency;
+  }
+
   //check and reset fps vars, display fps value in debug window
   var evalFps = function(){
     var currentTime = new Date().getTime();
@@ -130,6 +139,8 @@ function App(){
   //just to update ball and player paddle positions
   this.cycleUpdate = function(data){
     //update the balls
+    var latency = getLatency(data.timestamp)
+    console.log(latency)
     for(var a = 0; a < data.balls.length; a++){
       if(!haveBall(data.balls[a].id)){
         ball = new Ball();
@@ -138,8 +149,8 @@ function App(){
       }
       else{
         ball = getBall(data.balls[a].id);
-        ball.pos.x = data.balls[a].pos.x;
-        ball.pos.y = data.balls[a].pos.y;
+        ball.pos.x = data.balls[a].pos.x + data.balls[a].vec.x * latency;
+        ball.pos.y = data.balls[a].pos.y + data.balls[a].vec.y * latency;
         ball.vec.x = data.balls[a].vec.x;
         ball.vec.y = data.balls[a].vec.y;
       }

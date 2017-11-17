@@ -53,9 +53,9 @@ def clientUpdate(data):
     #    if bool(app.config['DEBUG_MODE']):
     print('EVENT: clientUpdate: ', data)
     data = json.loads(data)
-    print("Difference in time: ", time.time() - data['timestamp'])
+    latency = time.time() - data['timestamp']
     for b in data['balls']:
-        update_ball(b["id"], b["pos"], b["vec"])
+        update_ball(b["id"], b["pos"], b["vec"], latency)
 
     # collect room data from each player
     serverUpdate()
