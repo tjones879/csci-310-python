@@ -140,7 +140,6 @@ function App(){
   this.cycleUpdate = function(data){
     //update the balls
     var latency = getLatency(data.timestamp)
-    console.log(latency)
     for(var a = 0; a < data.balls.length; a++){
       if(!haveBall(data.balls[a].id)){
         ball = new Ball();
