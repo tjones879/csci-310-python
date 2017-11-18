@@ -100,6 +100,11 @@ class Player(walrus.Model):
         self.save()
         return Player.load(self.id)
 
+    def updatePaddle(self, pos):
+        self.paddle['x'] = pos['x']
+        self.paddle['y'] = pos['y']
+        self.save()
+
     def to_json(self):
         '''Recursively convert fields to json-friendly output.
 
@@ -117,8 +122,8 @@ class Player(walrus.Model):
                 id=str(self.id),
                 score=self.score,
                 paddle=dict(
-                    x=as_int(self.paddle['x']),
-                    y=as_int(self.paddle['y']),
+                    x=as_float(self.paddle['x']),
+                    y=as_float(self.paddle['y']),
                     ),
                 )
 

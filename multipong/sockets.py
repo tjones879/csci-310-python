@@ -30,6 +30,20 @@ def handle_disconnect():
     roomleave()
 
 
+@socketio.on('paddleUpdate')
+def paddleUpdate(data):
+    ''' Save any incoming paddle data to redis.
+    Expected json message: {
+        "paddle": {
+            "x": float,
+            "y": float
+            }
+        }
+    '''
+    player = Player.load(session['player'])
+    player.updatePaddle(data)
+
+
 @socketio.on('serverUpdate')
 def serverUpdate(action='cycleUpdate'):
     roomid = session.get('room')
