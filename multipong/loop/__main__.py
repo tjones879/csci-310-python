@@ -1,0 +1,3 @@
+from . import gameLoop
+
+gameLoop()
