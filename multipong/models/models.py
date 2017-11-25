@@ -1,9 +1,13 @@
-from multipong import walrus_conn
 import walrus
 import uuid
 import random
 from json import JSONEncoder
+'''
+In order to use this module, the builtin identifier `builtins.walrusconn`
+must be set to a correct connection to redis. This can be done by calling:
 
+`builtins.walrus_conn = walrus.Database.from_url(<REDIS_URL>)`
+'''
 
 DEFAULT_ARENA_SIZE = 1000
 BALL_TYPES = ["normal"]
