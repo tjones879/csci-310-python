@@ -31,9 +31,8 @@ app.config['SESSION_TYPE'] = 'redis'
 app.config['SESSION_REDIS'] = redis_conn
 Session(app)
 
-
-from multipong.routes import *
-from multipong.sockets import *
+from .routes import *
+from .sockets import *
 
 
 def create_app():

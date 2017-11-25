@@ -1,5 +1,5 @@
 from flask import render_template
-from multipong import app
+from . import app
 
 
 @app.route('/')
