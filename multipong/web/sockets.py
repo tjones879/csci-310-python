@@ -1,8 +1,8 @@
 from pprint import pprint
-from multipong import socketio, app
+from . import socketio, app
+from models import Room, Player, update_ball
 from flask import request, session
 from flask_socketio import emit, join_room, leave_room
-from .models import Room, Player, update_ball
 import uuid
 import re
 import random
