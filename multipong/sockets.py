@@ -2,7 +2,7 @@ from pprint import pprint
 from multipong import socketio, app
 from flask import request, session
 from flask_socketio import emit, join_room, leave_room
-from multipong.models import Room, Player, update_ball
+from .models import Room, Player, update_ball
 import uuid
 import re
 import random

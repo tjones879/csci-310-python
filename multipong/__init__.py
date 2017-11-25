@@ -6,6 +6,7 @@ import os
 from threading import Thread
 import eventlet
 import walrus
+import builtins
 
 eventlet.monkey_patch()
 
@@ -24,7 +25,8 @@ socketio = SocketIO(app, manage_session=False,
                     message_queue=app.config['REDIS_URL'], async_mode='eventlet')
 
 redis_conn = redis.from_url(app.config['REDIS_URL'])
-walrus_conn = walrus.Database.from_url(app.config['REDIS_URL'])
+# Define the walrus_conn for the walrus models module
+builtins.walrus_conn = walrus.Database.from_url(app.config['REDIS_URL'])
 app.config['SESSION_TYPE'] = 'redis'
 app.config['SESSION_REDIS'] = redis_conn
 Session(app)
@@ -32,7 +34,6 @@ Session(app)
 
 from multipong.routes import *
 from multipong.sockets import *
-from multipong.models import *
 
 
 def create_app():
