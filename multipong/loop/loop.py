@@ -12,6 +12,16 @@ p = r.pubsub(ignore_subscribe_messages=True)
 
 
 def constructUpdate(room: models.Room):
+    '''Construct an update for the socketio server to send out.
+
+    All mesages are published to the 'serverUpdate' channel with
+    the following schema:
+    {
+      "timestamp":  (float) Unix time when values were calculated,
+      "roomid":    (string) Client room where the update should be sent,
+      "payload": see `models.Room.to_json()`
+    }
+    '''
     data = '{"timestamp": ' + str(time())
     data += ', "roomid": "' + str(room.id)
     data += '", "payload": ' + json.dumps(room.to_json()) + '}'
@@ -21,7 +31,6 @@ def constructUpdate(room: models.Room):
 def throttleTime(prevTime: float):
     '''Sleep if necessary to keep a constant refresh rate'''
     sleepTime = max((MAXSLEEP) - (time() - prevTime), 0)
-    prevTime = time()
     sleep(sleepTime)
 
 
@@ -29,5 +38,6 @@ def gameLoop():
     while True:
         prevTime = time()
         for room in models.Room.all():
+            # Update positions for the current room's pong balls
             constructUpdate(room)
         throttleTime(prevTime)
