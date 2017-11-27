@@ -1,18 +1,34 @@
-from pprint import pprint
-from . import socketio, app
+from . import socketio, app, redis_conn, thread, thread_lock
 from models import Room, Player, update_ball
 from flask import request, session
 from flask_socketio import emit, join_room, leave_room
-import uuid
 import re
-import random
 import json
 
 MAX_ROOM_SIZE = 10  # maximum of 10 players/specs per room
 
 
+def backgroundThread():
+    p = redis_conn.pubsub(ignore_subscribe_messages=True)
+    p.subscribe('serverUpdate')
+    while True:
+        message = p.get_message()
+        while message is not None:
+            message = json.loads(message.get('data').decode('utf-8'))
+            roomid = message.get('roomid')
+            d = message.get('payload')
+            socketio.emit('testUpdate', d, room=roomid)
+            message = p.get_message()
+        socketio.sleep(0.1)
+
+
 @socketio.on('connect')
 def handle_connect():
+    global thread
+    with thread_lock:
+        if thread is None:
+            thread = socketio.start_background_task(target=backgroundThread)
+
     if bool(app.config['DEBUG_MODE']):
         emit('toggledebug', {'debug': True})
     print('EVENT: connected', session.sid, session)
@@ -39,7 +55,6 @@ def serverUpdate(action='cycleUpdate'):
     j['action'] = action
 
     # collect room data and send back to client
-    pprint(j)
     if action == 'init':
         emit('serverUpdate', j)
     else:
