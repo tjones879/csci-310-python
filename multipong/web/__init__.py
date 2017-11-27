@@ -3,7 +3,7 @@ from flask_socketio import SocketIO
 from flask_session import Session
 import redis
 import os
-from threading import Thread
+from threading import Thread, Lock
 import eventlet
 import walrus
 import builtins
@@ -30,6 +30,9 @@ builtins.walrus_conn = walrus.Database.from_url(app.config['REDIS_URL'])
 app.config['SESSION_TYPE'] = 'redis'
 app.config['SESSION_REDIS'] = redis_conn
 Session(app)
+
+thread = None
+thread_lock = Lock()
 
 from .routes import *
 from .sockets import *
