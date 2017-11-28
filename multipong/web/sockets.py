@@ -17,7 +17,7 @@ def backgroundThread():
             message = json.loads(message.get('data').decode('utf-8'))
             roomid = message.get('roomid')
             d = message.get('payload')
-            socketio.emit('testUpdate', d, room=roomid)
+            socketio.emit('serverUpdate', d, room=roomid)
             message = p.get_message()
         socketio.sleep(0.1)
 
@@ -45,7 +45,6 @@ def handle_disconnect():
     roomleave()
 
 
-@socketio.on('serverUpdate')
 def serverUpdate(action='cycleUpdate'):
     roomid = session.get('room')
     room = Room.load(roomid)
@@ -64,7 +63,7 @@ def serverUpdate(action='cycleUpdate'):
 @socketio.on('clientUpdate')
 def clientUpdate(data):
     #    if bool(app.config['DEBUG_MODE']):
-    print('EVENT: clientUpdate: ', data)
+    #print('EVENT: clientUpdate: ', data)
     data = json.loads(data)
     for b in data['balls']:
         update_ball(b["id"], b["pos"], b["vec"])
