@@ -1,6 +1,6 @@
 version: '2'
 services:
-  multipong:
+  web_server:
     build:
       context: .
       dockerfile: Dockerfile
@@ -11,5 +11,18 @@ services:
       - redis
     environment:
       - REDIS_URL=redis://redis:6379
+    command: python3 -u -m web
+
+  game_loop:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: multipong-loop
+    links:
+      - redis
+    environment:
+      - REDIS_URL=redis://redis:6379
+    command: python3 -u -m loop
+
   redis:
     image: redis:alpine

@@ -1,5 +1,5 @@
 import pytest
-from multipong import create_app
+from web import create_app
 
 
 @pytest.fixture

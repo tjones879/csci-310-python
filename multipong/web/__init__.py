@@ -3,9 +3,10 @@ from flask_socketio import SocketIO
 from flask_session import Session
 import redis
 import os
-from threading import Thread
+from threading import Thread, Lock
 import eventlet
 import walrus
+import builtins
 
 eventlet.monkey_patch()
 
@@ -24,15 +25,17 @@ socketio = SocketIO(app, manage_session=False,
                     message_queue=app.config['REDIS_URL'], async_mode='eventlet')
 
 redis_conn = redis.from_url(app.config['REDIS_URL'])
-walrus_conn = walrus.Database.from_url(app.config['REDIS_URL'])
+# Define the walrus_conn for the walrus models module
+builtins.walrus_conn = walrus.Database.from_url(app.config['REDIS_URL'])
 app.config['SESSION_TYPE'] = 'redis'
 app.config['SESSION_REDIS'] = redis_conn
 Session(app)
 
+thread = None
+thread_lock = Lock()
 
-from multipong.routes import *
-from multipong.sockets import *
-from multipong.models import *
+from .routes import *
+from .sockets import *
 
 
 def create_app():
