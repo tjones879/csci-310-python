@@ -45,9 +45,7 @@ var Client = new function(){
     };
     
     this.sendClientUpdate = function(){
-        var timestamp = Date.now() / 1000;
-        var j = '{"timestamp": ' + JSON.stringify(timestamp);
-        j += ', "balls": ' + JSON.stringify(app.getBalls()) + '}';
+        var j = '{"balls" : ' + JSON.stringify(app.getBalls()) + '}';
         socket.emit('clientUpdate', j);
     }
     

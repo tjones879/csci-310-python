@@ -3,7 +3,6 @@ from multipong import socketio, app
 from flask import request, session
 from flask_socketio import emit, join_room, leave_room
 from multipong.models import Room, Player, update_ball
-import time
 import uuid
 import re
 import random
@@ -38,7 +37,6 @@ def serverUpdate(action='cycleUpdate'):
     room.save()
     j = Room.load(roomid).to_json()
     j['action'] = action
-    j['timestamp'] = time.time()
 
     # collect room data and send back to client
     pprint(j)
@@ -53,11 +51,11 @@ def clientUpdate(data):
     #    if bool(app.config['DEBUG_MODE']):
     print('EVENT: clientUpdate: ', data)
     data = json.loads(data)
-    latency = time.time() - data['timestamp']
     for b in data['balls']:
-        update_ball(b["id"], b["pos"], b["vec"], latency)
+        update_ball(b["id"], b["pos"], b["vec"])
 
     # collect room data from each player
+    # Once all players data collected find average and emit serverUpdate('forceUpdate') to all players
     serverUpdate()
 
 
