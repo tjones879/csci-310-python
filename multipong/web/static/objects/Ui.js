@@ -14,6 +14,7 @@ ui = new function(){
   var screenWidth = window.innerWidth;
   var screenHeight = window.innerHeight;
   var screenScale = 1;
+	var padding = 10;
   var context = canvas.getContext("2d");
   var keytime = new Date();
 
@@ -37,20 +38,20 @@ ui = new function(){
     context.clearRect(0, 0, screenWidth, screenHeight);
 		
 		//Draw Table
-		var firstBoundry = 0 * screenScale;
-		var secondBoundry = 999 * screenScale;
-		this.firstPoint = 292 * screenScale;
-		this.secondPoint = 706 * screenScale;
+		var firstBoundry = padding * screenScale;
+		var secondBoundry = (999 + padding) * screenScale;
+		var firstPoint = (292 + padding) * screenScale;
+		var secondPoint = (706 + padding) * screenScale;
 		context.beginPath();
-		context.moveTo(this.firstPoint, firstBoundry);
-		context.lineTo(this.secondPoint, firstBoundry);
-		context.lineTo(secondBoundry, this.firstPoint);
-		context.lineTo(secondBoundry, this.secondPoint);
-		context.lineTo(this.secondPoint, secondBoundry);
-		context.lineTo(this.firstPoint, secondBoundry);
-		context.lineTo(firstBoundry, this.secondPoint);
-		context.lineTo(firstBoundry, this.firstPoint);
-		context.lineTo(this.firstPoint, firstBoundry);
+		context.moveTo(firstPoint, firstBoundry);
+		context.lineTo(secondPoint, firstBoundry);
+		context.lineTo(secondBoundry, firstPoint);
+		context.lineTo(secondBoundry, secondPoint);
+		context.lineTo(secondPoint, secondBoundry);
+		context.lineTo(firstPoint, secondBoundry);
+		context.lineTo(firstBoundry, secondPoint);
+		context.lineTo(firstBoundry, firstPoint);
+		context.lineTo(firstPoint, firstBoundry);
 		context.stroke();
 
     //Draw Balls
@@ -72,11 +73,11 @@ ui = new function(){
     }
     else{
       if(screenHeight < ui.arenaSize){
-        screenScale = screenHeight / ui.arenaSize;
+        screenScale = screenHeight / (ui.arenaSize + 2 * padding);
       }
     }
-    canvas.setAttribute("width", parseInt(ui.arenaSize * screenScale));
-    canvas.setAttribute("height", parseInt(ui.arenaSize * screenScale));
+    canvas.setAttribute("width", parseInt((ui.arenaSize + 2 * padding) * screenScale));
+    canvas.setAttribute("height", parseInt((ui.arenaSize + 2 * padding) * screenScale));
   }
 
   this.getScreenHeight = function(){
@@ -86,6 +87,10 @@ ui = new function(){
   this.getScreenScale = function(){
     return screenScale;
   }
+
+	this.getPadding = function(){
+		return padding;
+	}
 
   //Toggles a few ui components and updates info
   this.logOutUser = function(){
