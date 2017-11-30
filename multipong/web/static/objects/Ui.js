@@ -35,8 +35,26 @@ ui = new function(){
   //Renders components on canvas
   this.updateCanvas = function(pongBalls){
     context.clearRect(0, 0, screenWidth, screenHeight);
-    //Drawing all balls
-    for(var a = 0; a < pongBalls.length; a++){
+		
+		//Draw Table
+		var firstBoundry = 0 * screenScale;
+		var secondBoundry = 999 * screenScale;
+		this.firstPoint = 292 * screenScale;
+		this.secondPoint = 706 * screenScale;
+		context.beginPath();
+		context.moveTo(this.firstPoint, firstBoundry);
+		context.lineTo(this.secondPoint, firstBoundry);
+		context.lineTo(secondBoundry, this.firstPoint);
+		context.lineTo(secondBoundry, this.secondPoint);
+		context.lineTo(this.secondPoint, secondBoundry);
+		context.lineTo(this.firstPoint, secondBoundry);
+		context.lineTo(firstBoundry, this.secondPoint);
+		context.lineTo(firstBoundry, this.firstPoint);
+		context.lineTo(this.firstPoint, firstBoundry);
+		context.stroke();
+
+    //Draw Balls
+		for(var a = 0; a < pongBalls.length; a++){
       context.fillRect(parseInt(pongBalls[a].pos.x) * screenScale, parseInt(pongBalls[a].pos.y) * screenScale, 10, 10);
     }
     //Drawing the paddle

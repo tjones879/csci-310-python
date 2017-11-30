@@ -26,7 +26,67 @@ app = new function(){
     for(var a = 0; a < pongBalls.length; a++){
       pongBalls[a].pos.x += pongBalls[a].vec.x * this.elapsedTime;
       pongBalls[a].pos.y += pongBalls[a].vec.y * this.elapsedTime;
-      if(pongBalls[a].pos.x >= ui.arenaSize || pongBalls[a].pos.x < 0){
+			
+			//are we in range of left walls
+			if(pongBalls[a].pos.x <= 292){
+				console.log('in left range');
+				//did we hit upper left wall
+				if(pongBalls[a].pos.y + pongBalls[a].pos.x <= 292){
+					var x = pongBalls[a].vec.y * -1;
+					pongBalls[a].vec.y = pongBalls[a].vec.x * - 1;
+					pongBalls[a].vec.x = x;
+					wallAudio.play();
+				}
+				//did we hit lower left wall
+				else if(pongBalls[a].pos.y - pongBalls[a].pos.x >= 706){
+					console.log('hit lower left wall');
+					var x = pongBalls[a].vec.y;
+					pongBalls[a].vec.y = pongBalls[a].vec.x;
+					pongBalls[a].vec.x = x;
+					wallAudio.play();
+				}
+				//did we hit middle left wall
+				else if(pongBalls[a].pos.x <= 0){
+					pongBalls[a].vec.x *= -1;
+					wallAudio.play();
+				}
+			}
+			//are we in range of right walls
+			else if(pongBalls[a].pos.x >= 706){
+				console.log('in right range');
+				//did we hit upper right wall
+				if(pongBalls[a].pos.x - pongBalls[a].pos.y >= 706){
+					console.log('hit upper right wall');
+					var x = pongBalls[a].vec.y;
+					pongBalls[a].vec.y = pongBalls[a].vec.x;
+					pongBalls[a].vec.x = x;
+					wallAudio.play();
+				}
+				//did we hit lower right wall
+				else if(pongBalls[a].pos.y + pongBalls[a].pos.x >= 1706){
+					console.log('hit lower right wall');
+					var x = pongBalls[a].vec.y * -1;
+					pongBalls[a].vec.y = pongBalls[a].vec.x * - 1;
+					pongBalls[a].vec.x = x;
+					wallAudio.play();
+				}
+				//did we hit middle right wall
+				else if(pongBalls[a].pos.x >= 999){
+					pongBalls[a].vec.x *= -1;
+					wallAudio.play();
+				}
+			}
+			else{
+				if(pongBalls[a].pos.y <= 0){
+					pongBalls[a].vec.y *= -1;
+					wallAudio.play();
+				}
+				else if(pongBalls[a].pos.y >= 999){
+					pongBalls[a].vec.y *= -1;
+					wallAudio.play();
+				}
+			}
+      /*if(pongBalls[a].pos.x >= ui.arenaSize || pongBalls[a].pos.x < 0){
         if(player.hitBall(pongBalls[a].pos.x, pongBalls[a].pos.y)){
           paddleAudio.play();
           console.log('hit');
@@ -51,7 +111,7 @@ app = new function(){
         if(pongBalls[a].pos.y < 0)
           pongBalls[a].pos.y = 0;
         pongBalls[a].vec.y *= -1;
-      }
+      }*/
     }
     evalFps();
     if(logedIn)
