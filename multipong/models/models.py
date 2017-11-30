@@ -1,6 +1,7 @@
 import walrus
 import uuid
 import random
+from multipong.web import walrus_conn
 from json import JSONEncoder
 '''
 In order to use this module, the builtin identifier `builtins.walrusconn`
