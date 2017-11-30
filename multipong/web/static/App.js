@@ -13,6 +13,9 @@ app = new function(){
   var frames = 0;
   var logedIn = false;
 
+	//tables
+	var bounceTable = [[-1, 1], [1, -1], [1, 1], [-1, -1]];
+
   //Initial state of the game... not logged in
   this.init = function(){
     //initialize game state
@@ -47,8 +50,8 @@ app = new function(){
 				}
 				//did we hit middle left wall
 				else if(pongBalls[a].pos.x <= 0){
-					pongBalls[a].vec.x *= -1;
-					wallAudio.play();
+					console.log('hit left wall');
+					edgeHit(a, 0);
 				}
 			}
 			//are we in range of right walls
@@ -72,18 +75,20 @@ app = new function(){
 				}
 				//did we hit middle right wall
 				else if(pongBalls[a].pos.x >= 999){
-					pongBalls[a].vec.x *= -1;
-					wallAudio.play();
+					console.log('hit right wall');
+					edgeHit(a, 0);
 				}
 			}
 			else{
+				//did we hit top wall
 				if(pongBalls[a].pos.y <= 0){
-					pongBalls[a].vec.y *= -1;
-					wallAudio.play();
+					console.log('hit top wall');
+					edgeHit(a, 1);
 				}
+				//did we hit bottom wall
 				else if(pongBalls[a].pos.y >= 999){
-					pongBalls[a].vec.y *= -1;
-					wallAudio.play();
+					console.log('hit bottom wall');
+					edgeHit(a, 1);
 				}
 			}
       /*if(pongBalls[a].pos.x >= ui.arenaSize || pongBalls[a].pos.x < 0){
@@ -119,6 +124,26 @@ app = new function(){
     ui.updateCanvas(pongBalls);
     LOOP = setTimeout(loop, 10);
   }
+
+	var edgeHit = function(theBall, theEdge){
+    pongBalls[theBall].pos.x -= pongBalls[theBall].vec.x * this.elapsedTime;
+    pongBalls[theBall].pos.y -= pongBalls[theBall].vec.y * this.elapsedTime;
+		
+		//Is the edge a horizontal or vertical one
+		if(theEdge < 2){
+			pongBalls[theBall].vec.x *= bounceTable[theEdge][0];
+			pongBalls[theBall].vec.y *= bounceTable[theEdge][1];
+		}
+		//Is the edge a diagonal
+		else{
+			var vecx = pongBalls[theBall].vec.x;
+			var vecy = pongBalls[theBall].vec.y;
+			pongBalls[theBall].vec.x = vecy * bounceTable[theEdge][0];
+			pongBalls[theBall].vec.y = vecx * bounceTable[theEdge][1];
+		}
+	
+		wallAudio.play();
+	}
 
   //calculte the elapsed time for use in frame independent logic
   var getElapsedTime = function(){
