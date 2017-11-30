@@ -1,5 +1,5 @@
 from . import socketio, app, redis_conn, thread, thread_lock
-from models import Room, Player, update_ball
+from multipong.models import Room, Player, update_ball
 from flask import request, session
 from flask_socketio import emit, join_room, leave_room
 import re

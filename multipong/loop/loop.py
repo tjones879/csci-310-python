@@ -1,5 +1,5 @@
 from time import time, sleep
-import models
+import multipong.models
 import redis
 import json
 import os

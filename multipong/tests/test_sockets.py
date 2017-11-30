@@ -1,4 +1,4 @@
-from web.sockets import validate_username
+from multipong.web.sockets import validate_username
 
 
 def test_validate_username():

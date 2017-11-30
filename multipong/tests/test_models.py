@@ -1,4 +1,4 @@
-import models
+import multipong.models as models
 import uuid
 import pytest
 import json
