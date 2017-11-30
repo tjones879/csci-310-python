@@ -1,2 +1,2 @@
-from web import main
+from . import main
 main()
