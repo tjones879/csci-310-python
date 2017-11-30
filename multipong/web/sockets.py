@@ -78,7 +78,6 @@ def toggledebug():
     app.config['DEBUG_MODE'] = not app.config['DEBUG_MODE']
 
 
-@socketio.on('roomjoin')
 def roomjoin():
     if bool(app.config['DEBUG_MODE']):
         print("EVENT: roomjoin:", session.sid, session)
@@ -152,20 +151,16 @@ def handle_newplayer(data):
         # HAAX
         return False
     else:
+        username = validate_username(data.get('username'))
+        player = Player.new(user=username)
+        session['player'] = player.id
+
         if session.get('room') is None:
             roomjoin()
-        session['username'] = validate_username(data.get('username'))
 
         # update room with new player, balls and send new-player game data
         room = Room.load(session['room'])
-        player = Player.new(session_id=session.sid, user=data.get('username'))
         player = room.add_player(player)
-        session['player'] = player.id
-        numPlayers = len(room.players)
-        numBalls = len(room.balls)
-        if numPlayers > numBalls:
-            room.add_ball()
-        serverUpdate('forceUpdate')
 
         if app.config['DEBUG_MODE']:
             emit('debug', {'msg': "{} connected".format(session['username'])})

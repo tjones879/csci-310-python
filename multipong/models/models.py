@@ -86,7 +86,6 @@ class Player(walrus.Model):
             room=NULL_UUID,
             username=user,
             score=0,
-            sid=session_id,
         )
         player.paddle['x'] = 500
         player.paddle['y'] = 500
@@ -126,7 +125,6 @@ class Player(walrus.Model):
     username = walrus.TextField()
     score = walrus.IntegerField()
     paddle = walrus.HashField()
-    sid = walrus.UUIDField()
     # TODO: reginfo = walrus.HashField()
 
 
@@ -151,8 +149,19 @@ class Room(walrus.Model):
         if isinstance(player, Player):
             player = player.id
         self.players.add(player)
+        self.__update_ball_count()
+        # Return the updated player model
         added = Player.load(player).set_room(self.id)
         return added
+
+    def __update_ball_count(self):
+        ''' Check the ball count for the room to ensure that it is equal to the
+        number of players currently playing.
+        '''
+        numPlayers = len(self.players)
+        numBalls = len(self.balls)
+        if numPlayers > numBalls:
+            self.add_ball()
 
     def remove_player(self, player) -> Player:
         '''Remove player from room but do not delete instance.'''
