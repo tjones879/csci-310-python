@@ -78,30 +78,27 @@ def roomjoin():
         print("EVENT: roomjoin:", session)
     isPlayer = session.get('player') is not None
     if session.get('room') is None:
-        rooms = list(Room.all())
-        if len(rooms) < 1:  # case: no rooms on server
+        if Room.count() < 1:
             Room.create()
-            rooms = list(Room.all())
-        room = rooms[0]
-        for rm in list(Room.all()):
-            room = rm
+
+        for room in list(Room.all()):
             if isPlayer:
                 if len(room.players) < MAX_ROOM_SIZE:
                     room.add_player(session.get('player'))
                     break
             else:
-                if len(rm.spectators) < MAX_ROOM_SIZE:
+                if len(room.spectators) < MAX_ROOM_SIZE:
                     break
 
         session['room'] = room.id
         join_room(str(room.id))
-        if bool(app.config['DEBUG_MODE']):
-            print("EVENT: roomjoin: user '{}' joined room '{}'. session id: {}, session: {}".format(
-                session.get('username', "None"), room.id, session.sid, session))
         if "username" in session and session['username'] is not None:
             emit('roomjoin', {
                  "username": session['username'], "room": room.id},
                  room=str(room.id))
+        if bool(app.config['DEBUG_MODE']):
+            print("EVENT: roomjoin: user '{}' joined room '{}'. session id: {}, session: {}".format(
+                session.get('username', "None"), room.id, session.sid, session))
     else:
         join_room(session['room'])
 
