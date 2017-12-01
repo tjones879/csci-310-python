@@ -33,8 +33,16 @@ def handle_connect():
         emit('toggledebug', {'debug': True})
     print('EVENT: connected', session)
     roomjoin()
-
     serverUpdate('init')
+
+
+@socketio.on('clientUpdate')
+def clientUpdate(data):
+    data = json.loads(data)
+    for b in data['balls']:
+        update_ball(b['id'], b['pos'], b['vec'])
+
+    serverUpdate()
 
 
 @socketio.on('disconnect')
@@ -68,35 +76,32 @@ def toggledebug():
 def roomjoin():
     if bool(app.config['DEBUG_MODE']):
         print("EVENT: roomjoin:", session)
-    isPlayer = session.get('username') is not None
+    isPlayer = session.get('player') is not None
     if session.get('room') is None:
-        rooms = [r for r in Room.all()]
+        rooms = list(Room.all())
         if len(rooms) < 1:  # case: no rooms on server
             Room.create()
             rooms = list(Room.all())
         room = rooms[0]
-        for rm in rooms:
+        for rm in list(Room.all()):
+            room = rm
             if isPlayer:
-                if len(rm.players) < MAX_ROOM_SIZE:
-                    room = rm
-                    # TODO: Replace with Player object's id
-                    room.players.add(session.sid)
+                if len(room.players) < MAX_ROOM_SIZE:
+                    room.add_player(session.get('player'))
                     break
             else:
                 if len(rm.spectators) < MAX_ROOM_SIZE:
-                    room = rm
-                    # TODO: Replace with Player object's id
-                    room.spectators.add(session.sid)
                     break
+
         session['room'] = room.id
-        room.save()
         join_room(str(room.id))
         if bool(app.config['DEBUG_MODE']):
             print("EVENT: roomjoin: user '{}' joined room '{}'. session id: {}, session: {}".format(
                 session.get('username', "None"), room.id, session.sid, session))
         if "username" in session and session['username'] is not None:
             emit('roomjoin', {
-                 "username": session['username'], "room": room.id}, room=str(room.id))
+                 "username": session['username'], "room": room.id},
+                 room=str(room.id))
     else:
         join_room(session['room'])
 
