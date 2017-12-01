@@ -170,9 +170,9 @@ class Room(walrus.Model):
         if isinstance(player, Player):
             player = player.id
         self.players.remove(player)
-        self.wall -= 1
+        self.wall -= 2
         self.save()
-        return Player.load(player).set_room(NULL_UUID)
+        return Player.load(player).set_room(wall=-1, room=NULL_UUID)
 
     def add_ball(self) -> Ball:
         ball = Ball.new()
