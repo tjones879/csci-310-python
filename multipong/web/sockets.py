@@ -50,7 +50,6 @@ def handle_disconnect():
     print('EVENT: disconnect', session)
     user_logout()
     session.clear()
-    roomleave()
 
 
 def serverUpdate(action='cycleUpdate'):
@@ -103,24 +102,22 @@ def roomjoin():
         join_room(session['room'])
 
 
-@socketio.on('roomleave')
 def roomleave():
-    isPlayer = session.get('username') is not None
-    if session.get('room') is None:
-        # whoops
-        if app.config['DEBUG_MODE']:
-            print('left room when not joined to one')
-    else:
-        room = list(Room.query(Room.id == session['room'])).__getitem__(
-            0)  # avoids key error
+    isPlayer = 'player' in session and session.get('player') is not None
+    if session.get('room') is not None:
+        room = Room.load(session['room'])
         leave_room(session.get('room'))
+        print("Player: ", session['player'])
         if isPlayer:
-            room.players.remove(session.sid)
-        else:
-            room.spectators.remove(session.sid)
+            room.remove_player(session['player'])
         if len(room.players) == 0 and len(room.spectators) == 0:
+            print("Deleting room")
             room.delete()
-        # remove player from room in database
+        else:
+            print("Players: ", len(room.players), " and spectators: ", len(room.spectators))
+            for player in room.players:
+                print(player)
+        del session['room']
 
 
 def validate_username(username: str) -> str:
@@ -137,7 +134,6 @@ def validate_username(username: str) -> str:
 def handle_newplayer(data):
     print("EVENT: login: ", data, " :: ", session)
     if data.get('username') is None or len(data.get('username')) < 1:
-        # HAAX
         return False
     else:
         username = validate_username(data.get('username'))
@@ -158,19 +154,12 @@ def handle_newplayer(data):
 
 @socketio.on('logout')
 def user_logout():
+    roomleave()
     if 'player' in session and session['player'] is not None:
         if app.config['DEBUG_MODE']:
             print('EVENT: logout:', session.get('username'), session.sid)
 
-        # update room with player leaving, number of balls reduceing etc.
-        room = Room.load(session['room'])
-        room.remove_player(session['player'])
         player = Player.load(session['player'])
         player.delete()
         del session['player']
-        numPlayers = len(room.players)
-        numBalls = len(room.balls)
-        if numPlayers < numBalls:
-            room.pop_last_ball()
-
-        serverUpdate(action='forceUpdate')
+        # Emit a user-left event to the room

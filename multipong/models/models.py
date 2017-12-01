@@ -162,9 +162,14 @@ class Room(walrus.Model):
         numBalls = len(self.balls)
         if numPlayers > numBalls:
             self.add_ball()
+        elif numPlayers < numBalls:
+            self.pop_last_ball()
 
     def remove_player(self, player) -> Player:
-        '''Remove player from room but do not delete instance.'''
+        '''Remove player from room but do not delete instance.
+           We also check to make sure that the room is balanced for the number
+           of current players.
+        '''
         if not (isinstance(player, Player) or isinstance(player, uuid.UUID)):
                 raise TypeError("Parameter must be of type"
                                 "multipong.model.Player or uuid.UUID,"
@@ -172,6 +177,7 @@ class Room(walrus.Model):
         if isinstance(player, Player):
             player = player.id
         self.players.remove(player)
+        self.__update_ball_count()
         return Player.load(player).set_room(NULL_UUID)
 
     def add_ball(self) -> Ball:
