@@ -107,16 +107,10 @@ def roomleave():
     if session.get('room') is not None:
         room = Room.load(session['room'])
         leave_room(session.get('room'))
-        print("Player: ", session['player'])
         if isPlayer:
             room.remove_player(session['player'])
         if len(room.players) == 0 and len(room.spectators) == 0:
-            print("Deleting room")
             room.delete()
-        else:
-            print("Players: ", len(room.players), " and spectators: ", len(room.spectators))
-            for player in room.players:
-                print(player)
         del session['room']
 
 
