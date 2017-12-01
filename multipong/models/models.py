@@ -80,7 +80,7 @@ class Ball(walrus.Model):
 
 class Player(walrus.Model):
     @staticmethod
-    def new(session_id=uuid.uuid4(), user="DUMMY") -> 'Player':
+    def new(session_id=uuid.uuid4(), user="DUMMY", wall=0) -> 'Player':
         player = Player.create(
             id=uuid.uuid4(),
             room=NULL_UUID,
@@ -90,11 +90,14 @@ class Player(walrus.Model):
         )
         player.paddle['x'] = 500
         player.paddle['y'] = 500
+        player.paddle['wall'] = wall
+
         player.save()
         return Player.load(player.id)
 
-    def set_room(self, room: uuid.UUID) -> 'Player':
+    def set_room(self, wall: int, room: uuid.UUID) -> 'Player':
         self.room = room
+        self.paddle['wall'] = wall
         self.save()
         return Player.load(self.id)
 
@@ -115,6 +118,7 @@ class Player(walrus.Model):
                 id=str(self.id),
                 score=self.score,
                 paddle=dict(
+                    wall=as_int(self.paddle['wall']),
                     x=as_int(self.paddle['x']),
                     y=as_int(self.paddle['y']),
                     ),
@@ -134,7 +138,7 @@ class Room(walrus.Model):
     @staticmethod
     def new() -> 'Room':
         room = Room.create(
-            id=uuid.uuid4()
+            id=uuid.uuid4(),
         )
         return room
 
@@ -151,7 +155,10 @@ class Room(walrus.Model):
         if isinstance(player, Player):
             player = player.id
         self.players.add(player)
-        added = Player.load(player).set_room(self.id)
+        self.wall += 2
+        self.save()
+        added = Player.load(player)
+        added.set_room(self.wall - 2, self.id)
         return added
 
     def remove_player(self, player) -> Player:
@@ -163,6 +170,8 @@ class Room(walrus.Model):
         if isinstance(player, Player):
             player = player.id
         self.players.remove(player)
+        self.wall -= 1
+        self.save()
         return Player.load(player).set_room(NULL_UUID)
 
     def add_ball(self) -> Ball:
@@ -210,6 +219,7 @@ class Room(walrus.Model):
     # [ {playerid: <uuid>, score: <int>}, ... ]
     leaderboard = walrus.SetField()
     arenasize = walrus.IntegerField(default=DEFAULT_ARENA_SIZE)
+    wall = walrus.IntegerField(default=0)
 
 
 class RoomEncoder(JSONEncoder):
