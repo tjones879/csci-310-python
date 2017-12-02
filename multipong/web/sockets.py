@@ -79,16 +79,14 @@ def roomjoin():
     if session.get('room') is None:
         if Room.count() < 1:
             Room.create()
-
-        for room in list(Room.all()):
-            if isPlayer:
-                if len(room.players) < MAX_ROOM_SIZE:
+        rooms = list(Room.all())
+        if isPlayer:
+            for room in rooms:
+                if len(room.players) < MAX_ROOM_SIZE: #TODO: MAX_ROOM_SIZE doesn't match real max room size
                     room.add_player(session.get('player'))
                     break
-            else:
-                if len(room.spectators) < MAX_ROOM_SIZE:
-                    break
-
+        else:
+            room = rooms[0]
         session['room'] = room.id
         join_room(str(room.id))
         if "username" in session and session['username'] is not None:
@@ -109,7 +107,7 @@ def roomleave():
         leave_room(session.get('room'))
         if isPlayer:
             room.remove_player(session['player'])
-        if len(room.players) == 0 and len(room.spectators) == 0:
+        if len(room.players) == 0:
             room.delete()
         del session['room']
 
