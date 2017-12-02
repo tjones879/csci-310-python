@@ -2,6 +2,7 @@ import walrus
 import uuid
 import random
 import os
+from time import time
 from json import JSONEncoder
 '''
 In order to use this module, the builtin identifier `builtins.walrusconn`
@@ -17,6 +18,7 @@ BALL_TYPES = ["normal"]
 MIN_SPEED = 50
 MAX_SPEED = 150
 NULL_UUID = uuid.uuid4()
+BOUNCE_TABLE = [[-1, 1], [1, -2], [1, 1], [-1, -1]]
 
 
 def update_ball(id: uuid.UUID, pos: dict, vec: dict):
@@ -28,8 +30,60 @@ def update_ball(id: uuid.UUID, pos: dict, vec: dict):
     ball.save()
 
 
+def edgeHit(ball: 'Ball', edge: int, elapsed: float):
+    posx = asFloat(ball.position['x'])
+    posy = asFloat(ball.position['y'])
+    vecx = asFloat(ball.vector['x'])
+    vecy = asFloat(ball.vector['y'])
+
+    posx -= vecx * elapsed
+    posy -= vecy * elapsed
+    # Is the edge a horizontal or vertical?
+    if edge < 2:
+        vecx *= BOUNCE_TABLE[edge][0]
+        vecy *= BOUNCE_TABLE[edge][1]
+    # The edge must be a diagonal
+    else:
+        vecx = vecy * BOUNCE_TABLE[edge][0]
+        vecy = vecx * BOUNCE_TABLE[edge][1]
+    # Copy values back into redis model
+    ball.position['x'] = posx
+    ball.position['y'] = posy
+    ball.vector['x'] = vecx
+    ball.vector['y'] = vecy
+    print("Ball: ", ball.id, " hit edge: ", edge)
+
+
+def checkPosition(ball: 'Ball', elapsed: float):
+    pos_sum = asFloat(ball.position['x']) + asFloat(ball.position['y'])
+    pos_diff = asFloat(ball.position['x']) - asFloat(ball.position['y'])
+    # Are we in the range of left walls?
+    if asFloat(ball.position['x']) <= 292:
+        if pos_sum <= 292:
+            edgeHit(ball, 3, elapsed)
+        elif -1*pos_diff >= 706:
+            edgeHit(ball, 2, elapsed)
+        elif asFloat(ball.position['x']) <= 0:
+            edgeHit(ball, 0, elapsed)
+    # Are we in the range of right walls?
+    elif asFloat(ball.position['x']) >= 706:
+        if pos_diff >= 706:
+            edgeHit(ball, 2, elapsed)
+        elif pos_sum >= 1706:
+            edgeHit(ball, 3, elapsed)
+        elif asFloat(ball.position['x']) >= 999:
+            edgeHit(ball, 0, elapsed)
+    else:
+        if asFloat(ball.position['y']) <= 0 or asFloat(ball.position['y']) >= 999:
+            edgeHit(ball, 1, elapsed)
+
+
 def as_int(obj) -> int:
     return int(obj.decode('utf-8'))
+
+
+def asFloat(obj) -> float:
+    return float(obj.decode('utf-8'))
 
 
 class Ball(walrus.Model):
@@ -41,10 +95,16 @@ class Ball(walrus.Model):
         )
         ball.vector['x'] = random.randint(MIN_SPEED, MAX_SPEED) * random.choice([-1, 1])
         ball.vector['y'] = random.randint(MIN_SPEED, MAX_SPEED) * random.choice([-1, 1])
-        ball.position['x'] = 500 + as_int(ball.vector['x'])
-        ball.position['y'] = 500 + as_int(ball.vector['y'])
+        ball.position['x'] = 500 + asFloat(ball.vector['x'])
+        ball.position['y'] = 500 + asFloat(ball.vector['y'])
         ball.save()
         return Ball.load(ball.id)
+
+    def move(self, elapsed: float):
+        self.position['x'] = asFloat(self.position['x']) + asFloat(self.vector['x']) * elapsed
+        self.position['y'] = asFloat(self.position['y']) + asFloat(self.vector['y']) * elapsed
+        checkPosition(self, elapsed)
+        self.save()
 
     def to_json(self):
         '''Recursively convert fields to json-friendly output.
@@ -66,11 +126,11 @@ class Ball(walrus.Model):
         return dict(
                 id=str(self.id),
                 pos=dict(
-                    x=as_int(self.position['x']),
-                    y=as_int(self.position['y'])),
+                    x=asFloat(self.position['x']),
+                    y=asFloat(self.position['y'])),
                 vec=dict(
-                    x=as_int(self.vector['x']),
-                    y=as_int(self.vector['y'])),
+                    x=asFloat(self.vector['x']),
+                    y=asFloat(self.vector['y'])),
                 type=self.ballType
                 )
 
@@ -121,8 +181,8 @@ class Player(walrus.Model):
                 score=self.score,
                 paddle=dict(
                     wall=as_int(self.paddle['wall']),
-                    x=as_int(self.paddle['x']),
-                    y=as_int(self.paddle['y']),
+                    x=asFloat(self.paddle['x']),
+                    y=asFloat(self.paddle['y']),
                     ),
                 )
 
@@ -140,6 +200,7 @@ class Room(walrus.Model):
     def new() -> 'Room':
         room = Room.create(
             id=uuid.uuid4(),
+            lastUpdate=time(),
         )
         return room
 
@@ -209,6 +270,14 @@ class Room(walrus.Model):
         ball_id = uuid.UUID(self.balls[index].decode('utf-8'))
         return Ball.load(ball_id)
 
+    def moveBalls(self):
+        elapsedTime = time() - self.lastUpdate
+        self.lastUpdate = time()
+        self.save()
+        for ball in self.balls:
+            ball = ball.decode('utf-8')
+            Ball.load(ball).move(elapsedTime)
+
     def to_json(self) -> dict:
         '''Recursively convert fields to json-friendly output.
 
@@ -235,3 +304,4 @@ class Room(walrus.Model):
     balls = walrus.ListField()
     players = walrus.SetField()
     wall = walrus.IntegerField(default=0)
+    lastUpdate = walrus.FloatField(default=0)

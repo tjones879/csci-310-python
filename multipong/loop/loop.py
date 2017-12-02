@@ -38,6 +38,6 @@ def gameLoop():
     while True:
         prevTime = time()
         for room in models.Room.all():
-            # Update positions for the current room's pong balls
+            room.moveBalls()
             constructUpdate(room)
         throttleTime(prevTime)
