@@ -34,15 +34,6 @@ def handle_connect():
     serverUpdate('init')
 
 
-@socketio.on('clientUpdate')
-def clientUpdate(data):
-    data = json.loads(data)
-    for b in data['balls']:
-        update_ball(b['id'], b['pos'], b['vec'])
-
-    serverUpdate()
-
-
 @socketio.on('disconnect')
 def handle_disconnect():
     print('EVENT: disconnect', session)
