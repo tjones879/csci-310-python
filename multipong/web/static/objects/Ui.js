@@ -1,5 +1,5 @@
 //User Interface Class to controll the user interface elements
-ui = new function(){
+function Ui(){
   //initialize private ui variables
   var loginForm = document.getElementById("login-cmp");
   var loginName = document.getElementById("nickname-input");
@@ -16,7 +16,7 @@ ui = new function(){
   var screenScale = 1;
 	var padding = 10;
   var context = canvas.getContext("2d");
-  var keytime = new Date();
+	var keys = new Array(256);
 
   this.user = "Not Logged In";
   this.arenaSize = 1000;
@@ -30,7 +30,8 @@ ui = new function(){
     resize();
     window.onresize = resize;
     username.innerHTML = this.user;
-    window.onkeydown = processAppInput;
+    window.onkeydown = keyDownInput;
+		window.onkeyup = keyUpInput;
   }
 
   //Renders components on canvas
@@ -61,6 +62,15 @@ ui = new function(){
     //Drawing the paddle
     player.draw(context);
   }
+
+	this.updateInput = function(elapsedTime){
+		if(keys[65] || keys[87]){
+			player.decrement(elapsedTime);
+		}
+		if(keys[68] || keys[83]){
+			player.increment(elapsedTime);
+		}
+	}
 
   //In the event the user resizes browser
   var resize = function(){
@@ -108,29 +118,19 @@ ui = new function(){
     closeBtn.classList.toggle('visible');
   }
 
-  var processAppInput = function(event){
-    if(new Date() - keytime > 10){
-      keytime = new Date();
-      //console.log(keytime);
-      //input if user is logged in
-      if(!loginForm.classList.contains("visible")){
-        console.log(event.keyCode);
-        if(event.keyCode == 113)//q
-          app.logOutUser();
-        else if(event.keyCode == 63)//?
-          app.toggleDebugMode();
-        else if(event.keyCode == 65)//a
-          player.moveLeft();
-        else if(event.keyCode == 68)//d
-          player.moveRight();
-      }
-      //input if user is not logged in
-      else{
-        if(event.keyCode == 13)//ENTER
-          app.logInUser();
-      }
-    }
-  }
+  var keyDownInput = function(event){
+		if(!loginForm.classList.contains('visible')){
+			keys[event.keyCode] = true;
+		}
+		else
+			if(event.keyCode == 13)//ENTER
+				app.logInUser();
+	}
+
+	var keyUpInput = function(event){
+		if(!loginForm.classList.contains('visible'))
+			keys[event.keyCode] = false;
+	}
 
   this.setRoom = function(id){
     roomId.innerHTML = '(' + id + ')';
