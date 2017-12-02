@@ -234,10 +234,6 @@ class Room(walrus.Model):
     id = walrus.UUIDField(primary_key=True, index=True)
     balls = walrus.ListField()
     players = walrus.SetField()
-    spectators = walrus.SetField()
-    # [ {playerid: <uuid>, score: <int>}, ... ]
-    leaderboard = walrus.SetField()
-    arenasize = walrus.IntegerField(default=DEFAULT_ARENA_SIZE)
     wall = walrus.IntegerField(default=0)
 
 

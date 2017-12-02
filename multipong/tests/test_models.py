@@ -14,7 +14,6 @@ class TestRoom:
 
     def test_create(self, room):
         assert isinstance(room.id, uuid.UUID), "room.id is actually of type {}".format(str(type(room.id)))
-        assert room.arenasize == models.DEFAULT_ARENA_SIZE
 
     def test_add_player_byinstance(self, room):
         player = models.Player.new()
@@ -47,13 +46,6 @@ class TestRoom:
         room.add_player(player.id)
         room.remove_player(player)
         assert len(room.players) == 0
-
-    def test_specadd(self, room):
-        assert room.spectators.add("testspectator")
-        room.save()
-        assert "testspectator" in room.spectators
-        room.spectators.remove("testspectator")
-        assert "testspectator" not in room.spectators
 
     def test_ball_at(self, room):
         added = room.add_ball()
