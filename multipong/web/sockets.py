@@ -1,11 +1,9 @@
 from . import socketio, app, redis_conn, thread, thread_lock
-from models import Room, Player, update_ball
+from models import Room, Player, update_ball, DEFAULT_ARENA_SIZE
 from flask import request, session
 from flask_socketio import emit, join_room, leave_room
 import re
 import json
-
-MAX_ROOM_SIZE = 10  # maximum of 10 players/specs per room
 
 
 def backgroundThread():
@@ -82,7 +80,7 @@ def roomjoin():
         rooms = list(Room.all())
         if isPlayer:
             for room in rooms:
-                if len(room.players) < MAX_ROOM_SIZE: #TODO: MAX_ROOM_SIZE doesn't match real max room size
+                if len(room.players) < DEFAULT_ARENA_SIZE:
                     room.add_player(session.get('player'))
                     break
         else:
