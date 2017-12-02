@@ -221,10 +221,3 @@ class Room(walrus.Model):
     id = walrus.UUIDField(primary_key=True, index=True)
     balls = walrus.ListField()
     players = walrus.SetField()
-
-
-class RoomEncoder(JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, Room):
-            return obj.to_json()
-        return JSONEncoder.encode(self, obj)
