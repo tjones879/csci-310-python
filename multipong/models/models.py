@@ -86,7 +86,6 @@ class Player(walrus.Model):
             room=NULL_UUID,
             username=user,
             score=0,
-            sid=session_id,
         )
         player.paddle['x'] = 500
         player.paddle['y'] = 500
@@ -130,7 +129,6 @@ class Player(walrus.Model):
     username = walrus.TextField()
     score = walrus.IntegerField()
     paddle = walrus.HashField()
-    sid = walrus.UUIDField()
     # TODO: reginfo = walrus.HashField()
 
 
@@ -159,10 +157,27 @@ class Room(walrus.Model):
         self.save()
         added = Player.load(player)
         added.set_room(self.wall - 2, self.id)
+        self.__update_ball_count()
+        # Return the updated player model
+        added = Player.load(player)
         return added
 
+    def __update_ball_count(self):
+        ''' Check the ball count for the room to ensure that it is equal to the
+        number of players currently playing.
+        '''
+        numPlayers = len(self.players)
+        numBalls = len(self.balls)
+        if numPlayers > numBalls:
+            self.add_ball()
+        elif numPlayers < numBalls:
+            self.pop_last_ball()
+
     def remove_player(self, player) -> Player:
-        '''Remove player from room but do not delete instance.'''
+        '''Remove player from room but do not delete instance.
+           We also check to make sure that the room is balanced for the number
+           of current players.
+        '''
         if not (isinstance(player, Player) or isinstance(player, uuid.UUID)):
                 raise TypeError("Parameter must be of type"
                                 "multipong.model.Player or uuid.UUID,"
@@ -172,6 +187,7 @@ class Room(walrus.Model):
         self.players.remove(player)
         self.wall -= 2
         self.save()
+        self.__update_ball_count()
         return Player.load(player).set_room(wall=-1, room=NULL_UUID)
 
     def add_ball(self) -> Ball:
