@@ -11,7 +11,7 @@ services:
       - redis
     environment:
       - REDIS_URL=redis://redis:6379
-    command: python3 -u -m web
+    command: python3 -u -m multipong web
 
   game_loop:
     build:
@@ -22,7 +22,7 @@ services:
       - redis
     environment:
       - REDIS_URL=redis://redis:6379
-    command: python3 -u -m loop
+    command: python3 -u -m multipong loop
 
   redis:
     image: redis:alpine
