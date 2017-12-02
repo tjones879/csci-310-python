@@ -52,17 +52,9 @@ def handle_disconnect():
 
 def serverUpdate(action='cycleUpdate'):
     roomid = session.get('room')
-    room = Room.load(roomid)
-
-    room.save()
     j = Room.load(roomid).to_json()
     j['action'] = action
-
-    # collect room data and send back to client
-    if action == 'init':
-        emit('serverUpdate', j)
-    else:
-        socketio.emit('serverUpdate', j)
+    emit('serverUpdate', j)
 
 
 @socketio.on('toggledebug')
