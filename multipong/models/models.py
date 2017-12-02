@@ -12,7 +12,7 @@ must be set to a correct connection to redis. This can be done by calling:
 
 walrus_conn = walrus.Database.from_url(os.environ.get('REDIS_URL'))
 
-DEFAULT_ARENA_SIZE = 1000
+DEFAULT_ARENA_SIZE = 8  # Currently using an octogon for the arena
 BALL_TYPES = ["normal"]
 MIN_SPEED = 50
 MAX_SPEED = 150
