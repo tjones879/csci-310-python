@@ -121,6 +121,17 @@ def latencyHandshake(data):
     socketio.emit('latencyHandshake', timestamp)
 
 
+@socketio.on('paddleUpdate')
+def paddleUpdate(data):
+    '''Take in and verify the client's information about their paddle.
+
+    If the client's data could not be verified, the correct position will
+    be sent back.
+    If action field of the message is set to `paddleHit`, the response
+    will show a failure or success.
+    '''
+
+
 @socketio.on('login')
 def handle_newplayer(data):
     print("EVENT: login: ", data, " :: ", session)
