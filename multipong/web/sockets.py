@@ -7,6 +7,7 @@ import json
 
 
 def backgroundThread():
+    '''Automatically push all updates for the room to clients.'''
     p = redis_conn.pubsub(ignore_subscribe_messages=True)
     p.subscribe('serverUpdate')
     while True:
@@ -23,6 +24,11 @@ def backgroundThread():
 
 @socketio.on('connect')
 def handle_connect():
+    '''Assign a room for clients to spectate upon connection.
+
+    Spawn a new background thread for updates if this is the
+    first connected client.
+    '''
     global thread
     with thread_lock:
         if thread is None:
@@ -55,6 +61,16 @@ def toggledebug():
 
 
 def roomjoin():
+    '''Attempt to assign the client a room.
+
+    If the client already has a room (i.e. from spectating),
+    let them join the same room.
+    Spectators are given the first room returned by Redis and
+    are automatically subscribed to any updates.
+    Players must find the first room with an empty slot. The
+    room they are spectating may be full, so we may need to
+    send them elsewhere.
+    '''
     if bool(app.config['DEBUG_MODE']):
         print("EVENT: roomjoin:", session)
     isPlayer = session.get('player') is not None
@@ -67,22 +83,31 @@ def roomjoin():
                 if len(room.players) < DEFAULT_ARENA_SIZE:
                     room.add_player(session.get('player'))
                     break
-        else:
+        else:  # Redis returns pseudo-random order of rooms, spectate the first
             room = rooms[0]
         session['room'] = room.id
         join_room(str(room.id))
-        if "username" in session and session['username'] is not None:
-            emit('roomjoin', {
-                 "username": session['username'], "room": room.id},
-                 room=str(room.id))
         if bool(app.config['DEBUG_MODE']):
             print("EVENT: roomjoin: user '{}' joined room '{}'. session id: {}, session: {}".format(
                 session.get('username', "None"), room.id, session.sid, session))
     else:
-        join_room(session['room'])
+        room = Room.load(session.get('room'))
+        if len(room.players) > DEFAULT_ARENA_SIZE:
+            leave_room(session['room'])
+            session['room'] = None
+            roomjoin()
+        else:
+            room.add_player(session['player'])
+            join_room(session['room'])
+    if "username" in session and session['username'] is not None:
+        # Notify the room that a new player has joined.
+        emit('roomjoin', {
+             "username": session['username'], "room": room.id},
+             room=str(room.id))
 
 
 def roomleave():
+    '''Cleanly remove the client from the room and clear any session values.'''
     isPlayer = 'player' in session and session.get('player') is not None
     if session.get('room') is not None:
         room = Room.load(session['room'])
@@ -92,6 +117,7 @@ def roomleave():
         if len(room.players) == 0:
             room.delete()
         del session['room']
+        # TODO: Emit a user-left event to the room
 
 
 def validate_username(username: str) -> str:
@@ -114,12 +140,7 @@ def handle_newplayer(data):
         player = Player.new(user=username)
         session['player'] = player.id
 
-        if session.get('room') is None:
-            roomjoin()
-
-        # update room with new player, balls and send new-player game data
-        room = Room.load(session['room'])
-        player = room.add_player(player)
+        roomjoin()
 
         if app.config['DEBUG_MODE']:
             emit('debug', {'msg': "{} connected".format(session['username'])})
@@ -128,6 +149,8 @@ def handle_newplayer(data):
 
 @socketio.on('logout')
 def user_logout():
+    '''Ensure that the client is not inside a room, then delete
+    it from redis and clear its session.'''
     roomleave()
     if 'player' in session and session['player'] is not None:
         if app.config['DEBUG_MODE']:
@@ -136,4 +159,3 @@ def user_logout():
         player = Player.load(session['player'])
         player.delete()
         del session['player']
-        # Emit a user-left event to the room
