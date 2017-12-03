@@ -3,7 +3,6 @@ import uuid
 import random
 import os
 from time import time
-from json import JSONEncoder
 '''
 In order to use this module, the builtin identifier `builtins.walrusconn`
 must be set to a correct connection to redis. This can be done by calling:
@@ -21,16 +20,15 @@ NULL_UUID = uuid.uuid4()
 BOUNCE_TABLE = [[-1, 1], [1, -1], [1, 1], [-1, -1]]
 
 
-def update_ball(id: uuid.UUID, pos: dict, vec: dict):
-    ball = Ball.load(id)
-    ball.position['x'] = int(pos['x'])
-    ball.position['y'] = int(pos['y'])
-    ball.vector['x'] = vec['x']
-    ball.vector['y'] = vec['y']
-    ball.save()
-
-
 def edgeHit(ball: 'Ball', edge: int, elapsed: float):
+    ''' Reflect the ball according to the wall that it has hit.
+
+    edge -- Integer corresponding with location in the
+            bounce lookup table.
+    elapsed -- Unix time in seconds since the last ball
+               position update. This is required to prevent
+               the ball from getting 'stuck' behind a wall.
+    '''
     pos = dict(
             x=asFloat(ball.position['x']),
             y=asFloat(ball.position['y'])
@@ -61,6 +59,12 @@ def edgeHit(ball: 'Ball', edge: int, elapsed: float):
 
 
 def checkPosition(ball: 'Ball', elapsed: float):
+    ''' Figure out if the ball has hit a wall and bounce it back if it has.
+
+    We use the fact here that the arena is mirrored, so we split the
+    search space into three areas and further classify it by seeing if
+    the ball is above the corresponding linear equations for each side.
+    '''
     pos_sum = asFloat(ball.position['x']) + asFloat(ball.position['y'])
     pos_diff = asFloat(ball.position['x']) - asFloat(ball.position['y'])
     # Are we in the range of left walls?
@@ -107,24 +111,29 @@ class Ball(walrus.Model):
         return Ball.load(ball.id)
 
     def move(self, elapsed: float):
+        ''' Move the ball and check if it has collided with a wall.
+
+        We must explicitly call self.save() to avoid edge conditions with
+        walrus where changes are not preserved.
+        '''
         self.position['x'] = asFloat(self.position['x']) + asFloat(self.vector['x']) * elapsed
         self.position['y'] = asFloat(self.position['y']) + asFloat(self.vector['y']) * elapsed
         checkPosition(self, elapsed)
         self.save()
 
     def to_json(self):
-        '''Recursively convert fields to json-friendly output.
+        ''' Recursively convert fields to json-friendly output.
 
         Return a dict with the following schema:
         {
           id: "uuid",
           pos: {
-            x: int,
-            y: int,
+            x: float,
+            y: float,
             },
           vec: {
-            x: int,
-            y: int,
+            x: float,
+            y: float,
             },
           type: "ballType"
         }
@@ -170,15 +179,16 @@ class Player(walrus.Model):
         return Player.load(self.id)
 
     def to_json(self):
-        '''Recursively convert fields to json-friendly output.
+        ''' Recursively convert fields to json-friendly output.
 
         Return a dict with the following schema:
         {
           id: "uuid",
           score: int,
           paddle: {
-            x: int,
-            y: int,
+            wall: int,
+               x: float,
+               y: float,
             },
         }
         '''
@@ -198,7 +208,6 @@ class Player(walrus.Model):
     username = walrus.TextField()
     score = walrus.IntegerField()
     paddle = walrus.HashField()
-    # TODO: reginfo = walrus.HashField()
 
 
 class Room(walrus.Model):
@@ -211,10 +220,10 @@ class Room(walrus.Model):
         return room
 
     def add_player(self, player) -> Player:
-        '''Add a player to the room by id or instance and set their room field.
+        ''' Add a player to the room by id or instance and set their room field.
 
         Return the updated Player instance loaded from redis.
-        id -- Type uuid.UUID or Player
+        player -- Type uuid.UUID or Player
         '''
         if not (isinstance(player, Player) or isinstance(player, uuid.UUID)):
                 raise TypeError("Parameter must be of type"
@@ -234,8 +243,7 @@ class Room(walrus.Model):
 
     def __update_ball_count(self):
         ''' Check the ball count for the room to ensure that it is equal to the
-        number of players currently playing.
-        '''
+        number of players currently playing.'''
         numPlayers = len(self.players)
         numBalls = len(self.balls)
         if numPlayers > numBalls:
@@ -244,9 +252,10 @@ class Room(walrus.Model):
             self.pop_last_ball()
 
     def remove_player(self, player) -> Player:
-        '''Remove player from room but do not delete instance.
-           We also check to make sure that the room is balanced for the number
-           of current players.
+        ''' Remove player from room but do not delete instance.
+
+        We also check to make sure that the room is balanced for the number
+        of current players.
         '''
         if not (isinstance(player, Player) or isinstance(player, uuid.UUID)):
                 raise TypeError("Parameter must be of type"
@@ -285,7 +294,7 @@ class Room(walrus.Model):
             Ball.load(ball).move(elapsedTime)
 
     def to_json(self) -> dict:
-        '''Recursively convert fields to json-friendly output.
+        ''' Recursively convert fields to json-friendly output.
 
         Return a dict with the following schema:
         {
