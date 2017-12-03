@@ -23,8 +23,7 @@ def constructUpdate(room: models.Room):
     }
     '''
     data = '{"timestamp": ' + str(time())
-    data += ', "action": "' + 'forceUpdate'
-    data += '", "roomid": "' + str(room.id)
+    data += ', "roomid": "' + str(room.id)
     data += '", "payload": ' + json.dumps(room.to_json()) + '}'
     r.publish('serverUpdate', data)
 
