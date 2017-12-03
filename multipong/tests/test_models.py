@@ -14,7 +14,6 @@ class TestRoom:
 
     def test_create(self, room):
         assert isinstance(room.id, uuid.UUID), "room.id is actually of type {}".format(str(type(room.id)))
-        assert room.arenasize == models.DEFAULT_ARENA_SIZE
 
     def test_add_player_byinstance(self, room):
         player = models.Player.new()
@@ -48,13 +47,6 @@ class TestRoom:
         room.remove_player(player)
         assert len(room.players) == 0
 
-    def test_specadd(self, room):
-        assert room.spectators.add("testspectator")
-        room.save()
-        assert "testspectator" in room.spectators
-        room.spectators.remove("testspectator")
-        assert "testspectator" not in room.spectators
-
     def test_ball_at(self, room):
         added = room.add_ball()
         in_list = room.ball_at(0)
@@ -80,14 +72,6 @@ class TestRoom:
         assert room.id != room2.id
         room2.delete()
 
-    def test_json(self, room):
-        ball = room.add_ball()
-        player = room.add_player(models.Player.new())
-        print(json.dumps(room, cls=models.RoomEncoder))
-        room.remove_player(player.id)
-        models.Player.delete(player)
-        room.delete_ball(ball.id)
-
 
 class TestBall:
     @pytest.fixture(scope='function')
@@ -98,16 +82,16 @@ class TestBall:
         ball.delete()
 
     def test_create(self, ball):
-        as_int = lambda obj: int(obj.decode('utf-8'))
+        asFloat = lambda obj: float(obj.decode('utf-8'))
         assert isinstance(ball.id, uuid.UUID)
-        assert as_int(ball.position['x']) <= 500 + models.MAX_SPEED
-        assert as_int(ball.position['x']) >= 500 - models.MAX_SPEED
-        assert as_int(ball.position['y']) <= 500 + models.MAX_SPEED
-        assert as_int(ball.position['y']) >= 500 - models.MAX_SPEED
-        assert as_int(ball.vector['x']) >= -models.MAX_SPEED
-        assert as_int(ball.vector['x']) <= models.MAX_SPEED
-        assert as_int(ball.vector['y']) >= -models.MAX_SPEED
-        assert as_int(ball.vector['y']) <= models.MAX_SPEED
+        assert asFloat(ball.position['x']) <= 500 + models.MAX_SPEED
+        assert asFloat(ball.position['x']) >= 500 - models.MAX_SPEED
+        assert asFloat(ball.position['y']) <= 500 + models.MAX_SPEED
+        assert asFloat(ball.position['y']) >= 500 - models.MAX_SPEED
+        assert asFloat(ball.vector['x']) >= -models.MAX_SPEED
+        assert asFloat(ball.vector['x']) <= models.MAX_SPEED
+        assert asFloat(ball.vector['y']) >= -models.MAX_SPEED
+        assert asFloat(ball.vector['y']) <= models.MAX_SPEED
         assert ball.ballType in models.BALL_TYPES
 
     def test_uniqueness(self, ball):

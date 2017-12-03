@@ -1,11 +1,9 @@
 from . import socketio, app, redis_conn, thread, thread_lock
-from multipong.models import Room, Player, update_ball
+from multipong.models import Room, Player, update_ball, DEFAULT_ARENA_SIZE
 from flask import request, session
 from flask_socketio import emit, join_room, leave_room
 import re
 import json
-
-MAX_ROOM_SIZE = 10  # maximum of 10 players/specs per room
 
 
 def backgroundThread():
@@ -17,6 +15,7 @@ def backgroundThread():
             message = json.loads(message.get('data').decode('utf-8'))
             roomid = message.get('roomid')
             d = message.get('payload')
+            d['action'] = 'forceUpdate'
             socketio.emit('serverUpdate', d, room=roomid)
             message = p.get_message()
         socketio.sleep(0.1)
@@ -36,15 +35,6 @@ def handle_connect():
     serverUpdate('init')
 
 
-@socketio.on('clientUpdate')
-def clientUpdate(data):
-    data = json.loads(data)
-    for b in data['balls']:
-        update_ball(b['id'], b['pos'], b['vec'])
-
-    serverUpdate()
-
-
 @socketio.on('disconnect')
 def handle_disconnect():
     print('EVENT: disconnect', session)
@@ -54,17 +44,9 @@ def handle_disconnect():
 
 def serverUpdate(action='cycleUpdate'):
     roomid = session.get('room')
-    room = Room.load(roomid)
-
-    room.save()
     j = Room.load(roomid).to_json()
     j['action'] = action
-
-    # collect room data and send back to client
-    if action == 'init':
-        emit('serverUpdate', j)
-    else:
-        socketio.emit('serverUpdate', j)
+    emit('serverUpdate', j)
 
 
 @socketio.on('toggledebug')
@@ -79,16 +61,14 @@ def roomjoin():
     if session.get('room') is None:
         if Room.count() < 1:
             Room.create()
-
-        for room in list(Room.all()):
-            if isPlayer:
-                if len(room.players) < MAX_ROOM_SIZE:
+        rooms = list(Room.all())
+        if isPlayer:
+            for room in rooms:
+                if len(room.players) < DEFAULT_ARENA_SIZE:
                     room.add_player(session.get('player'))
                     break
-            else:
-                if len(room.spectators) < MAX_ROOM_SIZE:
-                    break
-
+        else:
+            room = rooms[0]
         session['room'] = room.id
         join_room(str(room.id))
         if "username" in session and session['username'] is not None:
@@ -109,7 +89,7 @@ def roomleave():
         leave_room(session.get('room'))
         if isPlayer:
             room.remove_player(session['player'])
-        if len(room.players) == 0 and len(room.spectators) == 0:
+        if len(room.players) == 0:
             room.delete()
         del session['room']
 

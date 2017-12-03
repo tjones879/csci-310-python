@@ -4,7 +4,7 @@ import redis
 import json
 import os
 
-MAXFPS = 2
+MAXFPS = 10
 MAXSLEEP = 1 / MAXFPS
 prevTime = time()
 r = redis.from_url(os.environ.get('REDIS_URL'))
@@ -38,6 +38,6 @@ def gameLoop():
     while True:
         prevTime = time()
         for room in models.Room.all():
-            # Update positions for the current room's pong balls
+            room.moveBalls()
             constructUpdate(room)
         throttleTime(prevTime)
