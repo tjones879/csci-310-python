@@ -2,6 +2,7 @@ from . import socketio, app, redis_conn, thread, thread_lock
 from multipong.models import Room, Player, update_ball, DEFAULT_ARENA_SIZE
 from flask import request, session
 from flask_socketio import emit, join_room, leave_room
+from time import time
 import re
 import json
 
@@ -102,6 +103,22 @@ def validate_username(username: str) -> str:
     forbidden = re.compile("[^a-zA-Z0-9 _-]")
     username = re.sub(forbidden, "", username)
     return username
+
+
+@socketio.on('latencyCheck')
+def latencyHandshake(data):
+    '''Provide the client with the correct current time for the server.
+
+    It is recommended that the client sends their current time with this
+    event. The loopback from this server with its time will provide the
+    client with enough information to adjust for both hardware time drift
+    and latency in later communication.
+    '''
+    timestamp = dict(
+            serverTime=time(),
+            data=data,
+            )
+    socketio.emit('latencyHandshake', timestamp)
 
 
 @socketio.on('login')
