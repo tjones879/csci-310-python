@@ -18,7 +18,7 @@ BALL_TYPES = ["normal"]
 MIN_SPEED = 50
 MAX_SPEED = 150
 NULL_UUID = uuid.uuid4()
-BOUNCE_TABLE = [[-1, 1], [1, -2], [1, 1], [-1, -1]]
+BOUNCE_TABLE = [[-1, 1], [1, -1], [1, 1], [-1, -1]]
 
 
 def update_ball(id: uuid.UUID, pos: dict, vec: dict):
@@ -31,26 +31,32 @@ def update_ball(id: uuid.UUID, pos: dict, vec: dict):
 
 
 def edgeHit(ball: 'Ball', edge: int, elapsed: float):
-    posx = asFloat(ball.position['x'])
-    posy = asFloat(ball.position['y'])
-    vecx = asFloat(ball.vector['x'])
-    vecy = asFloat(ball.vector['y'])
+    pos = dict(
+            x=asFloat(ball.position['x']),
+            y=asFloat(ball.position['y'])
+            )
+    vector = dict(
+            x=asFloat(ball.vector['x']),
+            y=asFloat(ball.vector['y'])
+            )
 
-    posx -= vecx * elapsed
-    posy -= vecy * elapsed
+    pos['x'] -= vector['x'] * elapsed
+    pos['y'] -= vector['y'] * elapsed
     # Is the edge a horizontal or vertical?
     if edge < 2:
-        vecx *= BOUNCE_TABLE[edge][0]
-        vecy *= BOUNCE_TABLE[edge][1]
+        vector['x'] *= BOUNCE_TABLE[edge][0]
+        vector['y'] *= BOUNCE_TABLE[edge][1]
     # The edge must be a diagonal
     else:
-        vecx = vecy * BOUNCE_TABLE[edge][0]
-        vecy = vecx * BOUNCE_TABLE[edge][1]
+        tmp_x = vector['x']
+        tmp_y = vector['y']
+        vector['x'] = tmp_y * BOUNCE_TABLE[edge][0]
+        vector['y'] = tmp_x * BOUNCE_TABLE[edge][1]
     # Copy values back into redis model
-    ball.position['x'] = posx
-    ball.position['y'] = posy
-    ball.vector['x'] = vecx
-    ball.vector['y'] = vecy
+    ball.position['x'] = pos['x']
+    ball.position['y'] = pos['y']
+    ball.vector['x'] = vector['x']
+    ball.vector['y'] = vector['y']
     print("Ball: ", ball.id, " hit edge: ", edge)
 
 
