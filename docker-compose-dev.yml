@@ -13,7 +13,7 @@ services:
       - REDIS_URL=redis://redis:6379
     command: python3 -u -m multipong web
     volumes:
-      - ${PWD}:/app
+      - .:/app
 
   game_loop:
     build:
@@ -26,7 +26,7 @@ services:
       - REDIS_URL=redis://redis:6379
     command: python3 -u -m multipong loop
     volumes:
-      - ${PWD}:/app
+      - .:/app
 
   redis:
     image: redis:alpine
