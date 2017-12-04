@@ -55,7 +55,7 @@ def edgeHit(ball: 'Ball', edge: int, elapsed: float):
     ball.position['y'] = pos['y']
     ball.vector['x'] = vector['x']
     ball.vector['y'] = vector['y']
-    print("Ball: ", ball.id, " hit edge: ", edge)
+    print("Ball: ", ball.id, " hit edge: ", edge, "at:", int(pos['x']), int(pos['y']))
 
 
 def checkPosition(ball: 'Ball', elapsed: float):
