@@ -57,7 +57,11 @@ function Ui(){
 
     //Draw Balls
 		for(var a = 0; a < pongBalls.length; a++){
-      context.fillRect(parseInt(pongBalls[a].pos.x) * screenScale, parseInt(pongBalls[a].pos.y) * screenScale, 10, 10);
+      context.beginPath();
+      context.arc(parseInt(pongBalls[a].pos.x) * screenScale,
+                  parseInt(pongBalls[a].pos.y) * screenScale,
+                  5, 0, 2 * Math.PI, false);
+      context.fill();
     }
     //Drawing the paddle
     player.draw(context);
