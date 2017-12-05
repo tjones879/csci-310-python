@@ -20,7 +20,7 @@ def backgroundThread():
             d['action'] = 'forceUpdate'
             socketio.emit('serverUpdate', d, room=roomid)
             message = p.get_message()
-        socketio.sleep(0.1)
+        socketio.sleep(0.05)
 
 
 @socketio.on('connect')
@@ -142,7 +142,7 @@ def latencyHandshake(data):
     '''
     timestamp = dict(
             serverTime=time(),
-            data=data,
+            data=json.loads(data),
             )
     socketio.emit('latencyHandshake', timestamp)
 

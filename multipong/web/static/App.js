@@ -6,6 +6,7 @@ function App(){
   var LOOP = null;
   var paddleAudio = new Audio('static/audio/paddle-hit.wav');
   var wallAudio = new Audio('static/audio/wall-hit.wav');
+  var driftTime = 0.0; // server's time - local time
   var previousTime = new Date().getTime();
   var frameTime = new Date().getTime();
   var updateTime = new Date().getTime();
@@ -160,6 +161,7 @@ function App(){
   //function fired on normal serverUpdate action=cycleUpdate
   //just to update ball and player paddle positions
   this.cycleUpdate = function(data){
+    var latency = (Date.now() / 1000) - data.timestamp - this.driftTime;
     //update the balls
     for(var a = 0; a < data.balls.length; a++){
       if(!haveBall(data.balls[a].id)){
@@ -169,10 +171,10 @@ function App(){
       }
       else{
         ball = getBall(data.balls[a].id);
-        ball.pos.x = data.balls[a].pos.x;
-        ball.pos.y = data.balls[a].pos.y;
         ball.vec.x = data.balls[a].vec.x;
         ball.vec.y = data.balls[a].vec.y;
+        ball.pos.x = data.balls[a].pos.x + ball.vec.x * latency;
+        ball.pos.y = data.balls[a].pos.y + ball.vec.y * latency;
       }
     }
 
@@ -185,6 +187,11 @@ function App(){
     ui.setRoom(data.id);
     this.cycleUpdate(data);
     loop();
+  }
+
+  this.calcDriftTime = function(clientTime, serverTime) {
+    var ping = ((Date.now() / 1000) - clientTime) / 2;
+    this.driftTime = serverTime - clientTime - ping;
   }
 
   var getBall = function(id){

@@ -4,7 +4,7 @@ import redis
 import json
 import os
 
-MAXFPS = 10
+MAXFPS = 27
 MAXSLEEP = 1 / MAXFPS
 prevTime = time()
 r = redis.from_url(os.environ.get('REDIS_URL'))
@@ -22,9 +22,10 @@ def constructUpdate(room: models.Room):
       "payload": see `models.Room.to_json()`
     }
     '''
-    data = '{"timestamp": ' + str(time())
-    data += ', "roomid": "' + str(room.id)
-    data += '", "payload": ' + json.dumps(room.to_json()) + '}'
+    roomJson = room.to_json()
+    roomJson['timestamp'] = time()
+    data = '{ "roomid": "' + str(room.id)
+    data += '", "payload": ' + json.dumps(roomJson) + '}'
     r.publish('serverUpdate', data)
 
 

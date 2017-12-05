@@ -14,8 +14,8 @@ walrus_conn = walrus.Database.from_url(os.environ.get('REDIS_URL'))
 
 DEFAULT_ARENA_SIZE = 8  # Currently using an octogon for the arena
 BALL_TYPES = ["normal"]
-MIN_SPEED = 50
-MAX_SPEED = 150
+MIN_SPEED = 125
+MAX_SPEED = 250
 NULL_UUID = uuid.uuid4()
 BOUNCE_TABLE = [[-1, 1], [1, -1], [1, 1], [-1, -1]]
 

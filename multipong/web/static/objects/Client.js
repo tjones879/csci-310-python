@@ -1,15 +1,17 @@
 /* global io */
 var Client = new function(){
     var socket = io.connect();
-    
+
     this.init = function(){
         //<Event Registration
         socket.on('toggledebug', onToggleDebug);
         socket.on('debug', onDebug);
         socket.on('serverUpdate', onServerUpdate);
+        socket.on('latencyHandshake', onLatencyReply);
 
         socket.on('connect', function() {
             console.log("connected");
+            latencyHandshake();
             //start the background game loop
         });
     }
@@ -36,6 +38,14 @@ var Client = new function(){
         else if(data.action == 'forceUpdate')
           app.forceUpdate(data);
     }
+    function latencyHandshake() {
+        var time = Date.now() / 1000
+        var j = '{"clientTime" : ' + time + '}';
+        socket.emit('latencyCheck', j);
+    }
+    function onLatencyReply(resp) {
+        app.calcDriftTime(resp.data.clientTime, resp.serverTime);
+    }
     this.logInUser = function(username) {
         socket.emit('login', {"username": username});
     };
@@ -43,51 +53,13 @@ var Client = new function(){
     this.logOutUser = function() {
         socket.emit('logout');
     };
-    
+
     this.sendClientUpdate = function(){
         var j = '{"balls" : ' + JSON.stringify(app.getBalls()) + '}';
         socket.emit('clientUpdate', j);
     }
-    
+
     this.ballHit = function(){
         socket.emit('ballHit');
     }
-    //</Event Handlers>
-
-    //OLD STUFF
-    // outgoing events
-    /*
-    
-    this.toggleDebug = function(){
-        this.socket.emit('toggleDebug');
-    }
-    
-    // incoming event handlers
-    this.playerReady = function(data) {
-        Game.create();
-    };
-    this.roomJoin = function(data) {
-        var $p = $('<p>');
-        $p.append(data.username + " has joined the room.");
-        $("#messages").append($p);
-    };
-    this.roomUpdate = function(data) {
-        console.log(data);
-    };
-    this.onMessage = function(data) {
-        var $p = $('<p>');
-        $p.append(data.username + ": " + data.message);
-        $("#messages").append($p);
-    };
-    this.tick = function() {
-        socket.emit('roomupdate', {}); // FUTURE: Send player data
-    };
-    
-    this.askUsername = function() {
-        Game.init()
-    };
-    */
-    
-    
-
 }
