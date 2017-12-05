@@ -156,6 +156,8 @@ def paddleUpdate(data):
     If action field of the message is set to `paddleHit`, the response
     will show a failure or success.
     '''
+    # player = session.get('player')
+    # player.updatePaddle(newPos)
 
 
 @socketio.on('login')
